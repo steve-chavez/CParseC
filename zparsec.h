@@ -10,23 +10,93 @@ typedef struct {
   size_t      len;
 } ZParsecSlice;
 
-ZParsecSlice slice_sub(ZParsecSlice s, size_t start, size_t len);
-ZParsecSlice slice_from_cstr(const char *s);
-
-#endif /* ZPARSEC_H_INCLUDED */
-
-#ifdef ZPARSEC_IMPLEMENTATION
-
-ZParsecSlice slice_sub(ZParsecSlice s, size_t start, size_t len) {
+static inline ZParsecSlice slice_sub(ZParsecSlice s, size_t start, size_t len) {
   return (ZParsecSlice){.ptr = s.ptr + start, .len = len};
 }
 
-ZParsecSlice slice_from_cstr(const char *s) {
+static inline ZParsecSlice slice_from_cstr(const char *s) {
   size_t n = 0;
   while (s[n] != '\0')
     n++;
   return (ZParsecSlice){.ptr = s, .len = n};
 }
 
+// TODO no error reporting
+// returns the accepted output slice and the rest of the string as another slice
+typedef struct {
+  bool         ok; // we don't have an Either type on C so we just use a bool
+  ZParsecSlice out;
+  ZParsecSlice rest;
+} ZParsecResult;
+
+typedef struct ZParsec ZParsec; // needed to pass compilation below
+// The structure has a "virtual method" to support composing parsers and keeping the dispatch uniform
+struct ZParsec {
+  ZParsecResult (*fn)(const ZParsec *self, ZParsecSlice input);
+  // only two combinators now, but this can be extended
+  union {
+    ZParsecSlice str;
+    struct {
+      const ZParsec *x, *y;
+    } alt;
+  };
+};
+
+// to call the virtual method
+#define ZPARSEC_VCALL(p, input) p->fn(p, input)
+
+static inline ZParsecResult zparse(const ZParsec *p, ZParsecSlice input) {
+  return ZPARSEC_VCALL(p, input);
+}
+
+// This is more like Parsec `string'`, which doesn't consume the matching prefix.
+// We do this to avoid having a `try` function and working better with `alt`
+ZParsec zparsec_string(const char *s);
+
+// `alt` for "alternative" is the equivalent of Parsec `<|>`
+ZParsec zparsec_alt(const ZParsec *a, const ZParsec *b);
+
+#endif /* ZPARSEC_H_INCLUDED */
+
+#ifdef ZPARSEC_IMPLEMENTATION
+
+static ZParsecResult string_fn(const ZParsec *self, ZParsecSlice input) {
+  const ZParsecSlice slice = self->str;
+
+  if (input.len < slice.len) // short circuit a too short string
+    return (ZParsecResult){.ok=false, .rest = input};
+
+  for (size_t i = 0; i < slice.len; ++i)
+    if (input.ptr[i] != slice.ptr[i]) // mismatch
+      return (ZParsecResult){.ok=false, .rest = input};
+
+  return (ZParsecResult){
+    .ok   = true,
+    .out  = slice_sub(input, 0, slice.len),
+    .rest = slice_sub(input, slice.len, input.len - slice.len)
+  };
+}
+
+ZParsec zparsec_string(const char *s) {
+  return (ZParsec){
+    .fn = string_fn
+  , .str = slice_from_cstr(s)
+  };
+}
+
+static ZParsecResult alt_fn(const ZParsec *self, ZParsecSlice input) {
+  ZParsecResult res = ZPARSEC_VCALL(self->alt.x, input);
+  if (res.ok)
+    return res;
+  else
+    return ZPARSEC_VCALL(self->alt.y, input);
+}
+
+ZParsec zparsec_alt(const ZParsec *x, const ZParsec *y) {
+  return (ZParsec){
+    .fn = alt_fn
+  , .alt = {.x = x, .y = y}
+  };
+}
 
 #endif /* ZPARSEC_IMPLEMENTATION */
