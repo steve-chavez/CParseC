@@ -30,16 +30,18 @@ typedef struct {
 } ZParsecResult;
 
 typedef struct ZParsec ZParsec; // needed to pass compilation below
+
+typedef union {
+  ZParsecSlice str;
+  struct {
+    const ZParsec *x, *y;
+  } two;
+} ZParsecCtx;
+
 // The structure has a "virtual method" to support composing parsers and keeping the dispatch uniform
 struct ZParsec {
   ZParsecResult (*fn)(const ZParsec *self, ZParsecSlice input);
-  // only two combinators now, but this can be extended
-  union {
-    ZParsecSlice str;
-    struct {
-      const ZParsec *x, *y;
-    } alt;
-  };
+  ZParsecCtx    ctx;
 };
 
 // to call the virtual method
@@ -61,7 +63,7 @@ ZParsec zparsec_alt(const ZParsec *a, const ZParsec *b);
 #ifdef ZPARSEC_IMPLEMENTATION
 
 static ZParsecResult string_fn(const ZParsec *self, ZParsecSlice input) {
-  const ZParsecSlice slice = self->str;
+  const ZParsecSlice slice = self->ctx.str;
 
   if (input.len < slice.len) // short circuit a too short string
     return (ZParsecResult){.ok=false, .rest = input};
@@ -80,22 +82,22 @@ static ZParsecResult string_fn(const ZParsec *self, ZParsecSlice input) {
 ZParsec zparsec_string(const char *s) {
   return (ZParsec){
     .fn = string_fn
-  , .str = slice_from_cstr(s)
+  , .ctx = (ZParsecCtx){.str = slice_from_cstr(s)}
   };
 }
 
 static ZParsecResult alt_fn(const ZParsec *self, ZParsecSlice input) {
-  ZParsecResult res = ZPARSEC_VCALL(self->alt.x, input);
+  ZParsecResult res = ZPARSEC_VCALL(self->ctx.two.x, input);
   if (res.ok)
     return res;
   else
-    return ZPARSEC_VCALL(self->alt.y, input);
+    return ZPARSEC_VCALL(self->ctx.two.y, input);
 }
 
 ZParsec zparsec_alt(const ZParsec *x, const ZParsec *y) {
   return (ZParsec){
     .fn = alt_fn
-  , .alt = {.x = x, .y = y}
+  , .ctx = (ZParsecCtx){.two = {.x = x, .y = y}}
   };
 }
 
