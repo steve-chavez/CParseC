@@ -58,6 +58,9 @@ ZParsec zparsec_string(const char *s);
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 ZParsec zparsec_alt(const ZParsec *a, const ZParsec *b);
 
+// `right` is the equivalent of Haskell's Applicative right sequencing `*>`
+ZParsec zparsec_right(const ZParsec *x, const ZParsec *y);
+
 #endif /* ZPARSEC_H_INCLUDED */
 
 #ifdef ZPARSEC_IMPLEMENTATION
@@ -97,6 +100,21 @@ static ZParsecResult alt_fn(const ZParsec *self, ZParsecSlice input) {
 ZParsec zparsec_alt(const ZParsec *x, const ZParsec *y) {
   return (ZParsec){
     .fn = alt_fn
+  , .ctx = (ZParsecCtx){.two = {.x = x, .y = y}}
+  };
+}
+
+static ZParsecResult right_fn(const ZParsec *self, ZParsecSlice input) {
+  ZParsecResult res = ZPARSEC_VCALL(self->ctx.two.x, input);
+  if (!res.ok)
+    return res;
+  else
+    return ZPARSEC_VCALL(self->ctx.two.y, res.rest);
+}
+
+ZParsec zparsec_right(const ZParsec *x, const ZParsec *y) {
+  return (ZParsec){
+    .fn = right_fn
   , .ctx = (ZParsecCtx){.two = {.x = x, .y = y}}
   };
 }

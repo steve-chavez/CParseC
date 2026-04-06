@@ -38,5 +38,18 @@ int main() {
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
+  {
+    ZParsec p1 = zparsec_string("value="),
+            p2   = zparsec_string("12345"),
+            p3  = zparsec_right(&p1, &p2);
+
+    puts("The right parser works...");
+
+    ZParsecResult result = zparse(&p3, slice_from_cstr("value=12345"));
+    assert(result.ok);
+    assert(strncmp(result.out.ptr, "12345", result.out.len) == 0);
+    assert(result.rest.len == 0);
+  }
+
   return EXIT_SUCCESS;
 }
