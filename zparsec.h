@@ -47,8 +47,8 @@ struct ZParsec {
 // to call the virtual method
 #define ZPARSEC_VCALL(p, input) p->fn(p, input)
 
-static inline ZParsecResult zparse(const ZParsec *p, ZParsecSlice input) {
-  return ZPARSEC_VCALL(p, input);
+static inline ZParsecResult zparse(const ZParsec *p, const char *input) {
+  return ZPARSEC_VCALL(p, slice_from_cstr(input));
 }
 
 // This is more like Parsec `string'`, which doesn't consume the matching prefix.
