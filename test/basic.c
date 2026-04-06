@@ -51,5 +51,18 @@ int main() {
     assert(result.rest.len == 0);
   }
 
+  {
+    ZParsec p1 = zparsec_string("select 1"),
+            p2 = zparsec_string(";"),
+            p3 = zparsec_left(&p1, &p2);
+
+    puts("The left parser works...");
+
+    ZParsecResult result = zparse(&p3, "select 1;");
+    assert(result.ok);
+    assert(strncmp(result.out.ptr, "select 1", result.out.len) == 0);
+    assert(result.rest.len == 0);
+  }
+
   return EXIT_SUCCESS;
 }

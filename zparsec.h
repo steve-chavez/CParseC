@@ -61,6 +61,9 @@ ZParsec zparsec_alt(const ZParsec *a, const ZParsec *b);
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`
 ZParsec zparsec_right(const ZParsec *x, const ZParsec *y);
 
+// `left` is the equivalent of Haskell's Applicative left sequencing `<*`
+ZParsec zparsec_left(const ZParsec *x, const ZParsec *y);
+
 #endif /* ZPARSEC_H_INCLUDED */
 
 #ifdef ZPARSEC_IMPLEMENTATION
@@ -115,6 +118,23 @@ static ZParsecResult right_fn(const ZParsec *self, ZParsecSlice input) {
 ZParsec zparsec_right(const ZParsec *x, const ZParsec *y) {
   return (ZParsec){
     .fn = right_fn
+  , .ctx = (ZParsecCtx){.two = {.x = x, .y = y}}
+  };
+}
+
+static ZParsecResult left_fn(const ZParsec *self, ZParsecSlice input) {
+  ZParsecResult res1 = ZPARSEC_VCALL(self->ctx.two.x, input);
+  if (!res1.ok) return res1;
+
+  ZParsecResult res2 = ZPARSEC_VCALL(self->ctx.two.y, res1.rest);
+  if (!res2.ok) return res2;
+
+  return (ZParsecResult){.ok = true, .out = res1.out, .rest = res2.rest};
+}
+
+ZParsec zparsec_left(const ZParsec *x, const ZParsec *y) {
+  return (ZParsec){
+    .fn = left_fn
   , .ctx = (ZParsecCtx){.two = {.x = x, .y = y}}
   };
 }
