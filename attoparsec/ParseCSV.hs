@@ -1,4 +1,9 @@
-{-# Language OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
+
+{-
+ -This is taken from https://raw.githubusercontent.com/robinbb/attoparsec-csv/refs/heads/master/Text/ParseCSV.hs,
+ -modified to obtain the input from stdin instead of a file
+ -}
 
 -- Copyright 2012 UserEvents, Inc.
 --
@@ -17,16 +22,17 @@
 -- Contributors:
 --    Robin Bate Boerop <me@robinbb.com>
 
-module Text.ParseCSV
-   ( CSV
-   , parseCSV
-   ) where
+module Main where
 
 import Prelude hiding (concat, takeWhile)
-import Control.Applicative ((<$>), (<|>), (<*>), (<*), (*>), many)
+import qualified Prelude as P
+import Control.Applicative ((<|>), many)
 import Control.Monad (void)
 import Data.Attoparsec.Text
 import qualified Data.Text as T (Text, concat, cons, append)
+import qualified Data.Text.IO as TIO
+import System.Exit (exitFailure, exitSuccess)
+import System.IO (hPutStrLn, stderr)
 
 type CSV = [[T.Text]]
 
@@ -75,3 +81,44 @@ file =
 parseCSV :: T.Text -> Either String CSV
 parseCSV =
    parseOnly file
+
+main :: IO ()
+main = do
+   input <- TIO.getContents
+   case parseCSV input of
+      Left err -> do
+         hPutStrLn stderr $ "csv parser fail: " ++ err
+         exitFailure
+      Right [] -> do
+         hPutStrLn stderr $ "csv parser fail: empty input"
+         exitFailure
+      -- Just print some rows and the total to see it succeeded
+      Right (headers : rows) -> do
+         printHeaders headers
+         mapM_ (uncurry (printRow headers)) (zip (P.take 2 rows) [0 ..])
+         putStrLn ("Parsed " ++ show (length rows) ++ " data rows.")
+         exitSuccess
+
+printHeaders :: [T.Text] -> IO ()
+printHeaders headers = do
+   putStrLn "Headers:"
+   mapM_ printHeader headers
+   putStrLn mempty
+   where
+      printHeader name = do
+         putStr "  - "
+         TIO.putStr name
+         putStrLn mempty
+
+printRow :: [T.Text] -> [T.Text] -> Int -> IO ()
+printRow headers row rowIndex = do
+   putStrLn ("Row " ++ show (rowIndex + 1))
+   mapM_ printColumn (zip headers (row ++ repeat mempty)) -- repeat mempty is in case it ends with empty fields, so it shows the column is empty
+   putStrLn mempty
+   where
+      printColumn (name, value) = do
+         putStr "  "
+         TIO.putStr name
+         putStr ": "
+         TIO.putStr value
+         putStrLn mempty
