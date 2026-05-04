@@ -3,18 +3,18 @@
 #include <assert.h>
 #include <string.h>
 
-#define ZPARSEC_IMPLEMENTATION
-#include "zparsec.h"
+#define CPARSEC_IMPLEMENTATION
+#include "cparsec.h"
 
 int main() {
-  ZParsec pbegin = zparsec_string("BEGIN"),
-          pend   = zparsec_string("END"),
-          pcombined = zparsec_alt(&pbegin, &pend);
+  CParsec pbegin = cpc_string("BEGIN"),
+          pend   = cpc_string("END"),
+          pcombined = cpc_alt(&pbegin, &pend);
 
   {
     puts("Succeeds over the whole string...");
 
-    ZParsecResult result = zparse(&pbegin, "BEGIN leftovers");
+    CpcResult result = cpc_parse(&pbegin, "BEGIN leftovers");
     assert(result.ok);
     assert(strncmp(result.out.ptr, "BEGIN", result.out.len) == 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
@@ -23,7 +23,7 @@ int main() {
   {
     puts("If a part fails it returns the whole string...");
 
-    ZParsecResult result = zparse(&pbegin, "unknown leftovers");
+    CpcResult result = cpc_parse(&pbegin, "unknown leftovers");
     assert(!result.ok);
     assert(result.out.len == 0);
     assert(strncmp(result.rest.ptr, "unknown leftovers", result.rest.len) == 0);
@@ -32,33 +32,33 @@ int main() {
   {
     puts("The alternative parser works...");
 
-    ZParsecResult result = zparse(&pcombined, "END leftovers");
+    CpcResult result = cpc_parse(&pcombined, "END leftovers");
     assert(result.ok);
     assert(strncmp(result.out.ptr, "END", result.out.len) == 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
   {
-    ZParsec p1  = zparsec_string("value="),
-            p2  = zparsec_string("12345"),
-            p3  = zparsec_right(&p1, &p2);
+    CParsec p1  = cpc_string("value="),
+            p2  = cpc_string("12345"),
+            p3  = cpc_right(&p1, &p2);
 
     puts("The right parser works...");
 
-    ZParsecResult result = zparse(&p3, "value=12345");
+    CpcResult result = cpc_parse(&p3, "value=12345");
     assert(result.ok);
     assert(strncmp(result.out.ptr, "12345", result.out.len) == 0);
     assert(result.rest.len == 0);
   }
 
   {
-    ZParsec p1 = zparsec_string("select 1"),
-            p2 = zparsec_string(";"),
-            p3 = zparsec_left(&p1, &p2);
+    CParsec p1 = cpc_string("select 1"),
+            p2 = cpc_string(";"),
+            p3 = cpc_left(&p1, &p2);
 
     puts("The left parser works...");
 
-    ZParsecResult result = zparse(&p3, "select 1;");
+    CpcResult result = cpc_parse(&p3, "select 1;");
     assert(result.ok);
     assert(strncmp(result.out.ptr, "select 1", result.out.len) == 0);
     assert(result.rest.len == 0);
