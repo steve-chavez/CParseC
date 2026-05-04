@@ -29,7 +29,7 @@ import qualified Prelude as P
 import Control.Applicative ((<|>), many)
 import Control.Monad (void)
 import Data.Attoparsec.Text
-import qualified Data.Text as T (Text, concat, cons, append)
+import qualified Data.Text as T (Text, concat)
 import qualified Data.Text.IO as TIO
 import System.Exit (exitFailure, exitSuccess)
 import System.IO (hPutStrLn, stderr)
@@ -48,13 +48,14 @@ unquotedField =
 
 insideQuotes :: Parser T.Text
 insideQuotes =
-   T.append <$> takeWhile (/= '"')
-            <*> (T.concat <$> many (T.cons <$> dquotes <*> insideQuotes))
+   T.concat <$> many insideQuotes'
    <?> "inside of double quotes"
-   where
-      dquotes =
-         string "\"\"" >> return '"'
-         <?> "paired double quotes"
+  where
+    insideQuotes' :: Parser T.Text
+    insideQuotes' =
+       takeWhile1 (/= '"')
+       <|> (string "\"\"" >> return "\"")
+       <?> "paired double quotes"
 
 quotedField :: Parser T.Text
 quotedField =
