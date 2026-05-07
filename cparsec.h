@@ -21,11 +21,25 @@ static inline CpcSlice slice_from_cstr(const char *s) {
   return (CpcSlice){.ptr = s, .len = n};
 }
 
-// TODO no error reporting
-// returns the accepted output slice and the rest of the string as another slice
+typedef enum { CPC_SLICE } CpcValueKind;
+
 typedef struct {
-  bool         ok; // we don't have an Either type on C so we just use a bool
-  CpcSlice out;
+  CpcValueKind kind;
+
+  union {
+    CpcSlice slice;
+  } as;
+} CpcValue;
+
+static inline CpcValue cpc_val_slice(CpcSlice s) {
+  return (CpcValue){.kind = CPC_SLICE, .as.slice = s};
+}
+
+// TODO no error reporting
+// returns the accepted output value and the rest of the string as another slice
+typedef struct {
+  bool     ok; // we don't have an Either type on C so we just use a bool
+  CpcValue out;
   CpcSlice rest;
 } CpcResult;
 
@@ -80,7 +94,7 @@ static CpcResult string_fn(const CParsec *self, CpcSlice input) {
 
   return (CpcResult){
     .ok   = true,
-    .out  = slice_sub(input, 0, slice.len),
+    .out  = cpc_val_slice(slice_sub(input, 0, slice.len)),
     .rest = slice_sub(input, slice.len, input.len - slice.len)
   };
 }

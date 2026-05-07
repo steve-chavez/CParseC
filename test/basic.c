@@ -16,7 +16,7 @@ int main() {
 
     CpcResult result = cpc_parse(&pbegin, "BEGIN leftovers");
     assert(result.ok);
-    assert(strncmp(result.out.ptr, "BEGIN", result.out.len) == 0);
+    assert(strncmp(result.out.as.slice.ptr, "BEGIN", result.out.as.slice.len) == 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
@@ -25,7 +25,7 @@ int main() {
 
     CpcResult result = cpc_parse(&pbegin, "unknown leftovers");
     assert(!result.ok);
-    assert(result.out.len == 0);
+    assert(result.out.as.slice.len == 0);
     assert(strncmp(result.rest.ptr, "unknown leftovers", result.rest.len) == 0);
   }
 
@@ -34,7 +34,7 @@ int main() {
 
     CpcResult result = cpc_parse(&pcombined, "END leftovers");
     assert(result.ok);
-    assert(strncmp(result.out.ptr, "END", result.out.len) == 0);
+    assert(strncmp(result.out.as.slice.ptr, "END", result.out.as.slice.len) == 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
@@ -47,7 +47,7 @@ int main() {
 
     CpcResult result = cpc_parse(&p3, "value=12345");
     assert(result.ok);
-    assert(strncmp(result.out.ptr, "12345", result.out.len) == 0);
+    assert(strncmp(result.out.as.slice.ptr, "12345", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
 
@@ -60,7 +60,7 @@ int main() {
 
     CpcResult result = cpc_parse(&p3, "select 1;");
     assert(result.ok);
-    assert(strncmp(result.out.ptr, "select 1", result.out.len) == 0);
+    assert(strncmp(result.out.as.slice.ptr, "select 1", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
 
