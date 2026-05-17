@@ -22,7 +22,7 @@ static inline CpcSlice slice_from_cstr(const char *s) {
 }
 
 // The value types are unit `()`, slice `a` and list `[a]`
-typedef enum { CPC_UNIT, CPC_SLICE, CPC_LIST } CpcValueKind;
+typedef enum { CPC_NOTHING, CPC_SLICE, CPC_LIST } CpcValueKind;
 
 typedef struct {
   CpcValueKind kind;
@@ -81,12 +81,8 @@ static inline CpcResult cpc_res_ok(CpcValue out, CpcSlice rest) {
   return (CpcResult){.out = out, .rest = rest, .kind = CPC_OK};
 }
 
-static inline CpcResult cpc_res_err(CpcSlice rest) {
-  return (CpcResult){.out = (CpcValue){.kind = CPC_UNIT}, .rest = rest, .kind = CPC_ERR};
-}
-
-static inline CpcResult cpc_res_err_kind(CpcSlice rest, CpcResKind kind) {
-  return (CpcResult){.out = (CpcValue){.kind = CPC_UNIT}, .rest = rest, .kind = kind};
+static inline CpcResult cpc_res_err(CpcSlice rest, CpcResKind kind) {
+  return (CpcResult){.out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .kind = kind};
 }
 
 static inline CpcValue cpc_val_slice(CpcSlice s) {
@@ -146,11 +142,11 @@ static CpcResult string_fn(const CParsec *self, __attribute__((unused)) CpcArena
   const CpcSlice slice = self->ctx.str;
 
   if (input.len < slice.len) // short circuit a too short string
-    return cpc_res_err(input);
+    return cpc_res_err(input, CPC_ERR);
 
   for (size_t i = 0; i < slice.len; ++i)
     if (input.ptr[i] != slice.ptr[i]) // mismatch
-      return cpc_res_err(input);
+      return cpc_res_err(input, CPC_ERR);
 
   return cpc_res_ok(cpc_val_slice(slice_sub(input, 0, slice.len)), slice_sub(input, slice.len, input.len - slice.len));
 }
@@ -219,11 +215,11 @@ static CpcResult apply_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
 
   CpcResKind resk = cpc_val_list_push(A, &out, r1.out);
   if (resk != CPC_OK)
-    return cpc_res_err_kind(r1.rest, resk);
+    return cpc_res_err(r1.rest, resk);
 
   resk = cpc_val_list_push(A, &out, r2.out);
   if (resk != CPC_OK)
-    return cpc_res_err_kind(r1.rest, resk);
+    return cpc_res_err(r1.rest, resk);
 
   return cpc_res_ok(out, r2.rest);
 }
