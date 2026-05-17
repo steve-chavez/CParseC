@@ -93,8 +93,12 @@ static inline CpcValue cpc_val_list(CpcArena *A) {
   return (CpcValue){.kind = CPC_LIST, .as.list = {.start = A->offset, .len = 0}};
 }
 
+static inline bool cpc_is_list(const CpcValue *v) {
+  return v && v->kind == CPC_LIST;
+}
+
 static inline CpcResKind cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue x) {
-  if (!list || list->kind != CPC_LIST)
+  if (!cpc_is_list(list))
     return CPC_ERR_NO_LIST;
   if (A->offset >= A->cap)
     return CPC_ERR_ARENA_FULL;
@@ -106,10 +110,9 @@ static inline CpcResKind cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue
 }
 
 static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue *list, size_t i) {
-  if (!A || !list || list->kind != CPC_LIST || i >= list->as.list.len) return NULL;
+  if (!A || !cpc_is_list(list) || i >= list->as.list.len) return NULL;
   return &A->items[list->as.list.start + i];
 }
-
 
 // to call the virtual method
 #define CPC_VCALL(p, A, input) p->fn(p, A, input)
