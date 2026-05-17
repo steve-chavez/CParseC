@@ -21,8 +21,7 @@ static inline CpcSlice slice_from_cstr(const char *s) {
   return (CpcSlice){.ptr = s, .len = n};
 }
 
-// The value types are unit `()`, slice `a` and list `[a]`
-typedef enum { CPC_NOTHING, CPC_SLICE, CPC_LIST } CpcValueKind;
+typedef enum { CPC_NOTHING, CPC_SLICE, CPC_LIST, CPC_PTR } CpcValueKind;
 
 typedef struct {
   CpcValueKind kind;
@@ -33,6 +32,7 @@ typedef struct {
       size_t start;
       size_t len;
     } list; // The list is a range in the arena [start..len]
+    void *ptr;
   } as;
 } CpcValue;
 
@@ -48,7 +48,7 @@ static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap) {
   *a = (CpcArena){.items = items, .cap = cap, .offset = 0};
 }
 
-typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_ARENA_FULL } CpcResKind;
+typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL } CpcResKind;
 
 // TODO no error reporting
 // returns the accepted output value and the rest of the string as another slice
@@ -60,11 +60,20 @@ typedef struct {
 
 typedef struct CParsec CParsec; // needed to pass compilation below
 
+// we need the data pointer so we can pass stack or heap allocated values,
+// otherwise only static values can be passed
+typedef CpcResult (*FmapFn)(CpcArena *arena, const CpcValue *v, CpcSlice rest, void *data);
+
 typedef union {
   CpcSlice str;
   struct {
     const CParsec *x, *y;
   } two;
+  struct {
+    const CParsec *x;
+    FmapFn fn;
+    void *data;
+  } fmap;
 } CpcCtx;
 
 // The structure has a "virtual method" to support composing parsers and keeping the dispatch uniform
@@ -93,11 +102,17 @@ static inline CpcValue cpc_val_list(CpcArena *A) {
   return (CpcValue){.kind = CPC_LIST, .as.list = {.start = A->offset, .len = 0}};
 }
 
+static inline CpcValue cpc_val_ptr(void *p) {
+  return (CpcValue){.kind = CPC_PTR, .as.ptr = p};
+}
+
 static inline bool cpc_is_list(const CpcValue *v) {
   return v && v->kind == CPC_LIST;
 }
 
 static inline CpcResKind cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue x) {
+  if (!A)
+    return CPC_ERR_NO_ARENA;
   if (!cpc_is_list(list))
     return CPC_ERR_NO_LIST;
   if (A->offset >= A->cap)
@@ -135,7 +150,11 @@ CParsec cpc_right(const CParsec *x, const CParsec *y);
 CParsec cpc_left(const CParsec *x, const CParsec *y);
 
 // `apply` is the equivalent of Haskell's Applicative sequential application `<*>
+// It produces a list of 2 elements, but this can be mapped to another struct
 CParsec cpc_apply(const CParsec *x, const CParsec *y);
+
+// `fmap` is the equivalent of Haskell's `<$>`
+CParsec cpc_fmap(const CParsec *x, FmapFn fn, void *data);
 
 #endif /* CPARSEC_H_INCLUDED */
 
@@ -231,6 +250,18 @@ CParsec cpc_apply(const CParsec *x, const CParsec *y) {
   return (CParsec){
     .fn = apply_fn
   , .ctx = (CpcCtx){.two = {.x = x, .y = y}}
+  };
+}
+
+static CpcResult fmap_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
+  CpcResult r = CPC_VCALL(self->ctx.fmap.x, A, input);
+  return self->ctx.fmap.fn(A, &r.out, r.rest, self->ctx.fmap.data);
+}
+
+CParsec cpc_fmap(const CParsec *x, FmapFn fn, void *data) {
+  return (CParsec){
+    .fn = fmap_fn
+  , .ctx = (CpcCtx){.fmap = {.x = x, .fn = fn, .data = data}}
   };
 }
 
