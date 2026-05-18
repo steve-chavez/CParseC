@@ -3,6 +3,7 @@
 Features:
 
 - Zero-copy parsing
+- No hidden allocations, the user must supply an arena
 
 Pending for CSV example:
 
@@ -10,4 +11,5 @@ Pending for CSV example:
 - [ ] manyTill
 - [ ] takeWhile1
 - [ ] takeWhile
+- [ ] sepBy1
 - [ ] <?>
