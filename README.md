@@ -14,3 +14,13 @@ Pending for CSV example:
 - [ ] takeWhile
 - [ ] sepBy1
 - [ ] <?>
+
+## Features
+
+Haskell combinators:
+
+- `CPC_ALT` (`<|>`)
+- `CPC_RIGHT` (`*>`)
+- `CPC_LEFT` (`<*`)
+- `CPC_APPLY` (`<*>`)
+- `CPC_FMAP` (`<$>`).
