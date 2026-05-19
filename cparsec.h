@@ -10,11 +10,11 @@ typedef struct {
   size_t      len;
 } CpcSlice;
 
-static inline CpcSlice slice_sub(CpcSlice s, size_t start, size_t len) {
+static inline CpcSlice cpc_slice_sub(CpcSlice s, size_t start, size_t len) {
   return (CpcSlice){.ptr = s.ptr + start, .len = len};
 }
 
-static inline CpcSlice slice_from_cstr(const char *s) {
+static inline CpcSlice cpc_slice_from_cstr(const char *s) {
   size_t n = 0;
   while (s[n] != '\0')
     n++;
@@ -133,7 +133,7 @@ static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue 
 #define CPC_VCALL(p, A, input) p->fn(p, A, input)
 
 static inline CpcResult cpc_parse(CpcArena *A, const CParsec *p, const char *input) {
-  return CPC_VCALL(p, A, slice_from_cstr(input));
+  return CPC_VCALL(p, A, cpc_slice_from_cstr(input));
 }
 
 // This is more like Parsec `string'`, which doesn't consume the matching prefix.
@@ -170,13 +170,13 @@ static CpcResult string_fn(const CParsec *self, __attribute__((unused)) CpcArena
     if (input.ptr[i] != slice.ptr[i]) // mismatch
       return cpc_res_err(input, CPC_ERR);
 
-  return cpc_res_ok(cpc_val_slice(slice_sub(input, 0, slice.len)), slice_sub(input, slice.len, input.len - slice.len));
+  return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)), cpc_slice_sub(input, slice.len, input.len - slice.len));
 }
 
 CParsec cpc_string(const char *s) {
   return (CParsec){
     .fn = string_fn
-  , .ctx = (CpcCtx){.str = slice_from_cstr(s)}
+  , .ctx = (CpcCtx){.str = cpc_slice_from_cstr(s)}
   };
 }
 
