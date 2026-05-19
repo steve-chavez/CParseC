@@ -41,11 +41,12 @@ typedef struct {
   CpcValue *items; // storage items
   size_t   cap;    // capacity
   size_t   offset; // bump pointer offset [0..cap]
+  void     *user;  // user pointer data for use on the fmap, we don't handle its lifecycle
 } CpcArena;
 
 // the signature is like this because both the arena and the items have to be declared separately to allow static or stack allocation
-static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap) {
-  *a = (CpcArena){.items = items, .cap = cap, .offset = 0};
+static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap, void *user) {
+  *a = (CpcArena){.items = items, .cap = cap, .offset = 0, .user = user};
 }
 
 typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL } CpcResKind;
@@ -60,9 +61,7 @@ typedef struct {
 
 typedef struct CParsec CParsec; // needed to pass compilation below
 
-// we need the data pointer so we can pass stack or heap allocated values,
-// otherwise only static values can be passed
-typedef CpcResult (*FmapFn)(CpcArena *arena, const CpcValue *v, CpcSlice rest, void *data);
+typedef CpcResult (*FmapFn)(CpcArena *arena, const CpcValue *v, CpcSlice rest);
 
 typedef union {
   CpcSlice str;
@@ -72,7 +71,6 @@ typedef union {
   struct {
     const CParsec *x;
     FmapFn fn;
-    void *data;
   } fmap;
 } CpcCtx;
 
@@ -154,7 +152,7 @@ CParsec cpc_left(const CParsec *x, const CParsec *y);
 CParsec cpc_apply(const CParsec *x, const CParsec *y);
 
 // `fmap` is the equivalent of Haskell's `<$>`
-CParsec cpc_fmap(const CParsec *x, FmapFn fn, void *data);
+CParsec cpc_fmap(const CParsec *x, FmapFn fn);
 
 #endif /* CPARSEC_H_INCLUDED */
 
@@ -255,13 +253,13 @@ CParsec cpc_apply(const CParsec *x, const CParsec *y) {
 
 static CpcResult fmap_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
   CpcResult r = CPC_VCALL(self->ctx.fmap.x, A, input);
-  return self->ctx.fmap.fn(A, &r.out, r.rest, self->ctx.fmap.data);
+  return self->ctx.fmap.fn(A, &r.out, r.rest);
 }
 
-CParsec cpc_fmap(const CParsec *x, FmapFn fn, void *data) {
+CParsec cpc_fmap(const CParsec *x, FmapFn fn) {
   return (CParsec){
     .fn = fmap_fn
-  , .ctx = (CpcCtx){.fmap = {.x = x, .fn = fn, .data = data}}
+  , .ctx = (CpcCtx){.fmap = {.x = x, .fn = fn}}
   };
 }
 

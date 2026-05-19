@@ -70,8 +70,8 @@ int main() {
       char y;
     } Pair;
 
-    CpcResult to_pair(CpcArena *A, const CpcValue *v, CpcSlice rest, void *data){
-      Pair *pair = data;
+    CpcResult to_pair(CpcArena *A, const CpcValue *v, CpcSlice rest){
+      Pair *pair = A->user;
       pair->x = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
       pair->y = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
 
@@ -81,12 +81,12 @@ int main() {
     CpcValue arena_storage[2];
     CpcArena arena;
     Pair pair = {0};
-    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]));
+    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &pair);
 
     CParsec p1 = cpc_string("A"),
             p2 = cpc_string("B"),
             p3 = cpc_apply(&p1, &p2),
-            p4 = cpc_fmap(&p3, to_pair, &pair);
+            p4 = cpc_fmap(&p3, to_pair);
 
     puts("The apply + fmap parser works...");
 
