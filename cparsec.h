@@ -59,27 +59,6 @@ typedef struct {
   CpcSlice   rest;
 } CpcResult;
 
-typedef struct CParsec CParsec; // needed to pass compilation below
-
-typedef CpcResult (*FmapFn)(CpcArena *arena, const CpcValue *v, CpcSlice rest);
-
-typedef union {
-  CpcSlice str;
-  struct {
-    const CParsec *x, *y;
-  } two;
-  struct {
-    const CParsec *x;
-    FmapFn fn;
-  } fmap;
-} CpcCtx;
-
-// The structure has a "virtual method" to support composing parsers and keeping the dispatch uniform
-struct CParsec {
-  CpcResult (*fn)(const CParsec *self, CpcArena *A, CpcSlice input);
-  CpcCtx    ctx;
-};
-
 static inline bool cpc_is_ok(CpcResult res) {
   return res.kind == CPC_OK;
 }
@@ -127,140 +106,89 @@ static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue 
   return &A->items[list->as.list.start + i];
 }
 
-// to call the virtual method
-#define CPC_VCALL(p, A, input) p->fn(p, A, input)
-
-static inline CpcResult cpc_parse(CpcArena *A, const CParsec *p, const char *input) {
-  return CPC_VCALL(p, A, cpc_slice_from_cstr(input));
-}
+#define CPC_DEFINE_PARSER(name)                                                                \
+  static inline CpcResult name(CpcArena *A, CpcSlice input)
 
 // This is more like Parsec `string'`, which doesn't consume the matching prefix.
 // We do this to avoid having a `try` function and working better with `alt`
-CParsec cpc_string(const char *s);
+#define CPC_STRING(name, lit)                                                                                                   \
+CPC_DEFINE_PARSER(name) {                                                                                                       \
+  (void)A;                                                                                                                      \
+  const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                                                \
+                                                                                                                                \
+  if (input.len < slice.len) /* short circuit a too short string */                                                             \
+    return cpc_res_err(input, CPC_ERR);                                                                                         \
+                                                                                                                                \
+  for (size_t i = 0; i < slice.len; ++i)                                                                                        \
+    if (input.ptr[i] != slice.ptr[i]) /* mismatch */                                                                            \
+      return cpc_res_err(input, CPC_ERR);                                                                                       \
+                                                                                                                                \
+  return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)), cpc_slice_sub(input, slice.len, input.len - slice.len)); \
+}
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
-CParsec cpc_alt(const CParsec *a, const CParsec *b);
+#define CPC_ALT(name, x, y)      \
+CPC_DEFINE_PARSER(name) {        \
+  CpcResult res = (x)(A, input); \
+  if (cpc_is_ok(res))            \
+    return res;                  \
+  else                           \
+    return (y)(A, input);        \
+}
 
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`
-CParsec cpc_right(const CParsec *x, const CParsec *y);
+#define CPC_RIGHT(name, x, y)    \
+CPC_DEFINE_PARSER(name) {        \
+  CpcResult res = (x)(A, input); \
+  if (!cpc_is_ok(res))           \
+    return res;                  \
+  else                           \
+    return (y)(A, res.rest);     \
+}
 
 // `left` is the equivalent of Haskell's Applicative left sequencing `<*`
-CParsec cpc_left(const CParsec *x, const CParsec *y);
+#define CPC_LEFT(name, x, y)              \
+CPC_DEFINE_PARSER(name) {                 \
+  CpcResult res1 = (x)(A, input);         \
+  if (!cpc_is_ok(res1)) return res1;      \
+                                          \
+  CpcResult res2 = (y)(A, res1.rest);     \
+  if (!cpc_is_ok(res2)) return res2;      \
+                                          \
+  return cpc_res_ok(res1.out, res2.rest); \
+}
 
 // `apply` is the equivalent of Haskell's Applicative sequential application `<*>
 // It produces a list of 2 elements, but this can be mapped to another struct
-CParsec cpc_apply(const CParsec *x, const CParsec *y);
+#define CPC_APPLY(name, x, y)                           \
+CPC_DEFINE_PARSER(name) {                               \
+  CpcResult  r1 = (x)(A, input);                        \
+  if (!cpc_is_ok(r1)) return r1;                        \
+  CpcResult  r2 = (y)(A, r1.rest);                      \
+  if (!cpc_is_ok(r2)) return r2;                        \
+                                                        \
+  CpcValue out = cpc_val_list(A);                       \
+                                                        \
+  CpcResKind resk = cpc_val_list_push(A, &out, r1.out); \
+  if (resk != CPC_OK)                                   \
+    return cpc_res_err(r1.rest, resk);                  \
+                                                        \
+  resk = cpc_val_list_push(A, &out, r2.out);            \
+  if (resk != CPC_OK)                                   \
+    return cpc_res_err(r1.rest, resk);                  \
+                                                        \
+  return cpc_res_ok(out, r2.rest);                      \
+}
 
 // `fmap` is the equivalent of Haskell's `<$>`
-CParsec cpc_fmap(const CParsec *x, FmapFn fn);
+#define CPC_FMAP(name, x, fn)     \
+CPC_DEFINE_PARSER(name) {         \
+  CpcResult r = x(A, input);      \
+  return (fn)(A, &r.out, r.rest); \
+}
 
 #endif /* CPARSEC_H_INCLUDED */
 
 #ifdef CPARSEC_IMPLEMENTATION
-
-static CpcResult string_fn(const CParsec *self, __attribute__((unused)) CpcArena *A, CpcSlice input) {
-  const CpcSlice slice = self->ctx.str;
-
-  if (input.len < slice.len) // short circuit a too short string
-    return cpc_res_err(input, CPC_ERR);
-
-  for (size_t i = 0; i < slice.len; ++i)
-    if (input.ptr[i] != slice.ptr[i]) // mismatch
-      return cpc_res_err(input, CPC_ERR);
-
-  return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)), cpc_slice_sub(input, slice.len, input.len - slice.len));
-}
-
-CParsec cpc_string(const char *s) {
-  return (CParsec){
-    .fn = string_fn
-  , .ctx = (CpcCtx){.str = cpc_slice_from_cstr(s)}
-  };
-}
-
-static CpcResult alt_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
-  CpcResult res = CPC_VCALL(self->ctx.two.x, A, input);
-  if (cpc_is_ok(res))
-    return res;
-  else
-    return CPC_VCALL(self->ctx.two.y, A, input);
-}
-
-CParsec cpc_alt(const CParsec *x, const CParsec *y) {
-  return (CParsec){
-    .fn = alt_fn
-  , .ctx = (CpcCtx){.two = {.x = x, .y = y}}
-  };
-}
-
-static CpcResult right_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
-  CpcResult res = CPC_VCALL(self->ctx.two.x, A, input);
-  if (!cpc_is_ok(res))
-    return res;
-  else
-    return CPC_VCALL(self->ctx.two.y, A, res.rest);
-}
-
-CParsec cpc_right(const CParsec *x, const CParsec *y) {
-  return (CParsec){
-    .fn = right_fn
-  , .ctx = (CpcCtx){.two = {.x = x, .y = y}}
-  };
-}
-
-static CpcResult left_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
-  CpcResult res1 = CPC_VCALL(self->ctx.two.x, A, input);
-  if (!cpc_is_ok(res1)) return res1;
-
-  CpcResult res2 = CPC_VCALL(self->ctx.two.y, A, res1.rest);
-  if (!cpc_is_ok(res2)) return res2;
-
-  return cpc_res_ok(res1.out, res2.rest);
-}
-
-CParsec cpc_left(const CParsec *x, const CParsec *y) {
-  return (CParsec){
-    .fn = left_fn
-  , .ctx = (CpcCtx){.two = {.x = x, .y = y}}
-  };
-}
-
-static CpcResult apply_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
-  CpcResult  r1 = CPC_VCALL(self->ctx.two.x, A, input);
-  if (!cpc_is_ok(r1)) return r1;
-  CpcResult  r2 = CPC_VCALL(self->ctx.two.y, A, r1.rest);
-  if (!cpc_is_ok(r2)) return r2;
-
-  CpcValue out = cpc_val_list(A);
-
-  CpcResKind resk = cpc_val_list_push(A, &out, r1.out);
-  if (resk != CPC_OK)
-    return cpc_res_err(r1.rest, resk);
-
-  resk = cpc_val_list_push(A, &out, r2.out);
-  if (resk != CPC_OK)
-    return cpc_res_err(r1.rest, resk);
-
-  return cpc_res_ok(out, r2.rest);
-}
-
-CParsec cpc_apply(const CParsec *x, const CParsec *y) {
-  return (CParsec){
-    .fn = apply_fn
-  , .ctx = (CpcCtx){.two = {.x = x, .y = y}}
-  };
-}
-
-static CpcResult fmap_fn(const CParsec *self, CpcArena *A, CpcSlice input) {
-  CpcResult r = CPC_VCALL(self->ctx.fmap.x, A, input);
-  return self->ctx.fmap.fn(A, &r.out, r.rest);
-}
-
-CParsec cpc_fmap(const CParsec *x, FmapFn fn) {
-  return (CParsec){
-    .fn = fmap_fn
-  , .ctx = (CpcCtx){.fmap = {.x = x, .fn = fn}}
-  };
-}
 
 #endif /* CPARSEC_IMPLEMENTATION */

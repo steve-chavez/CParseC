@@ -4,6 +4,7 @@ Features:
 
 - Zero-copy parsing
 - No hidden allocations, the user must supply an arena
+- Macro-based, no function pointers in hot paths
 
 Pending for CSV example:
 
