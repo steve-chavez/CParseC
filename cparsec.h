@@ -187,6 +187,18 @@ CPC_DEFINE_PARSER(name) {         \
   return (fn)(A, &r.out, r.rest); \
 }
 
+// Consume input as long as the predicate returns True, and return the consumed input.
+// This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
+#define CPC_TAKEWHILE(name, pred)                                                                       \
+CPC_DEFINE_PARSER(name) {                                                                               \
+  (void)A;                                                                                              \
+  size_t i = 0;                                                                                         \
+  while (i < input.len && (pred)(input.ptr[i]))                                                         \
+    i++;                                                                                                \
+  /* return the success from [0..i] and the rest from [i..len-i] */                                     \
+  return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)), cpc_slice_sub(input, i, input.len - i)); \
+}
+
 #endif /* CPARSEC_H_INCLUDED */
 
 #ifdef CPARSEC_IMPLEMENTATION

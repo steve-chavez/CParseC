@@ -36,6 +36,12 @@ CPC_STRING(p_b, "B");
 CPC_APPLY(p_ab, p_a, p_b);
 CPC_FMAP(p_mapped_ab, p_ab, to_pair);
 
+static inline bool is_a(char c){
+  return c == 'a';
+}
+
+CPC_TAKEWHILE(p_only_a, is_a);
+
 int main() {
   {
     puts("Succeeds over the whole string...");
@@ -96,6 +102,32 @@ int main() {
     assert(pair.x == 'A');
     assert(pair.y == 'B');
     assert(result.rest.len == 0);
+  }
+
+  {
+    puts("The takewhile parser succeeds...");
+
+    CpcResult result = p_only_a(NULL, cpc_slice_from_cstr("aaaaaaaaaabbbbb"));
+
+    assert(cpc_is_ok(result));
+    assert(strncmp(result.out.as.slice.ptr, "aaaaaaaaaa", result.out.as.slice.len) == 0);
+    assert(strncmp(result.rest.ptr, "bbbbb", result.rest.len) == 0);
+
+    puts("The takewhile parser never fails...");
+
+    CpcResult result2 = p_only_a(NULL, cpc_slice_from_cstr("aabbbbbaaaa"));
+
+    assert(cpc_is_ok(result2));
+    assert(strncmp(result2.out.as.slice.ptr, "aa", result2.out.as.slice.len) == 0);
+    assert(strncmp(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
+
+    puts("The takewhile parser never fails, it returns empty string if the pred returns false at first char...");
+
+    CpcResult result1 = p_only_a(NULL, cpc_slice_from_cstr("bbbbbaaaa"));
+
+    assert(cpc_is_ok(result1));
+    assert(strncmp(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
+    assert(strncmp(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
   }
 
   return EXIT_SUCCESS;

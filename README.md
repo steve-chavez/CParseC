@@ -11,16 +11,19 @@ Pending for CSV example:
 - [ ] many
 - [ ] manyTill
 - [ ] takeWhile1
-- [ ] takeWhile
 - [ ] sepBy1
 - [ ] <?>
 
 ## Features
 
-Haskell combinators:
+Basic combinators:
 
 - `CPC_ALT` (`<|>`)
 - `CPC_RIGHT` (`*>`)
 - `CPC_LEFT` (`<*`)
 - `CPC_APPLY` (`<*>`)
 - `CPC_FMAP` (`<$>`).
+
+Others:
+
+- `CPC_TAKEWHILE`
