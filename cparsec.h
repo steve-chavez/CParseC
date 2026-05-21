@@ -107,13 +107,15 @@ static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue 
 }
 
 #define CPC_DEFINE_PARSER(name)                                                                \
+  static inline CpcResult name(__attribute__ ((unused)) CpcArena *A, CpcSlice input)
+
+#define CPC_DEFINE_PARSER_ARENA(name)                                                                \
   static inline CpcResult name(CpcArena *A, CpcSlice input)
 
 // This is more like Parsec `string'`, which doesn't consume the matching prefix.
 // We do this to avoid having a `try` function and working better with `alt`
 #define CPC_STRING(name, lit)                                                                                                   \
 CPC_DEFINE_PARSER(name) {                                                                                                       \
-  (void)A;                                                                                                                      \
   const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                                                \
                                                                                                                                 \
   if (input.len < slice.len) /* short circuit a too short string */                                                             \
@@ -128,7 +130,7 @@ CPC_DEFINE_PARSER(name) {                                                       
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)      \
-CPC_DEFINE_PARSER(name) {        \
+CPC_DEFINE_PARSER_ARENA(name) {  \
   CpcResult res = (x)(A, input); \
   if (cpc_is_ok(res))            \
     return res;                  \
@@ -138,7 +140,7 @@ CPC_DEFINE_PARSER(name) {        \
 
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`
 #define CPC_RIGHT(name, x, y)    \
-CPC_DEFINE_PARSER(name) {        \
+CPC_DEFINE_PARSER_ARENA(name) {  \
   CpcResult res = (x)(A, input); \
   if (!cpc_is_ok(res))           \
     return res;                  \
@@ -148,7 +150,7 @@ CPC_DEFINE_PARSER(name) {        \
 
 // `left` is the equivalent of Haskell's Applicative left sequencing `<*`
 #define CPC_LEFT(name, x, y)              \
-CPC_DEFINE_PARSER(name) {                 \
+CPC_DEFINE_PARSER_ARENA(name) {           \
   CpcResult res1 = (x)(A, input);         \
   if (!cpc_is_ok(res1)) return res1;      \
                                           \
@@ -161,7 +163,7 @@ CPC_DEFINE_PARSER(name) {                 \
 // `apply` is the equivalent of Haskell's Applicative sequential application `<*>
 // It produces a list of 2 elements, but this can be mapped to another struct
 #define CPC_APPLY(name, x, y)                           \
-CPC_DEFINE_PARSER(name) {                               \
+CPC_DEFINE_PARSER_ARENA(name) {                         \
   CpcResult  r1 = (x)(A, input);                        \
   if (!cpc_is_ok(r1)) return r1;                        \
   CpcResult  r2 = (y)(A, r1.rest);                      \
@@ -182,15 +184,13 @@ CPC_DEFINE_PARSER(name) {                               \
 
 // `fmap` is the equivalent of Haskell's `<$>`
 #define CPC_FMAP(name, x, fn)     \
-CPC_DEFINE_PARSER(name) {         \
+CPC_DEFINE_PARSER_ARENA(name) {   \
   CpcResult r = x(A, input);      \
   return (fn)(A, &r.out, r.rest); \
 }
 
-
 #define ___CPC_TAKE_WHILE(name, pred, validate)                                                         \
 CPC_DEFINE_PARSER(name) {                                                                               \
-  (void)A;                                                                                              \
   size_t i = 0;                                                                                         \
   while (i < input.len && (pred)(input.ptr[i]))                                                         \
     i++;                                                                                                \
