@@ -41,6 +41,7 @@ static inline bool is_a(char c){
 }
 
 CPC_TAKEWHILE(p_only_a, is_a);
+CPC_TAKEWHILE1(p_at_least_1_a, is_a);
 
 int main() {
   {
@@ -128,6 +129,34 @@ int main() {
     assert(cpc_is_ok(result1));
     assert(strncmp(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
     assert(strncmp(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
+  }
+
+  {
+    puts("The takewhile1 parser succeeds...");
+
+    CpcResult result = p_at_least_1_a(NULL, cpc_slice_from_cstr("abb"));
+
+    assert(cpc_is_ok(result));
+    assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
+    assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
+
+    puts("The takewhile1 parser does fail...");
+
+    CpcResult result2 = p_at_least_1_a(NULL, cpc_slice_from_cstr("bba"));
+
+    assert(!cpc_is_ok(result2));
+    assert(result2.kind == CPC_ERR_TAKEWHILE1);
+    assert(strncmp(result2.out.as.slice.ptr, "", result2.out.as.slice.len) == 0);
+    assert(strncmp(result2.rest.ptr, "bba", result2.rest.len) == 0);
+
+    puts("The takewhile1 parser fails on empty input...");
+
+    CpcResult result3 = p_at_least_1_a(NULL, cpc_slice_from_cstr(""));
+
+    assert(!cpc_is_ok(result3));
+    assert(result3.kind == CPC_ERR_TAKEWHILE1);
+    assert(strncmp(result3.out.as.slice.ptr, "", result3.out.as.slice.len) == 0);
+    assert(strncmp(result3.rest.ptr, "", result3.rest.len) == 0);
   }
 
   return EXIT_SUCCESS;

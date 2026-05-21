@@ -10,7 +10,6 @@ Pending for CSV example:
 
 - [ ] many
 - [ ] manyTill
-- [ ] takeWhile1
 - [ ] sepBy1
 - [ ] <?>
 
@@ -27,3 +26,4 @@ Basic combinators:
 Others:
 
 - `CPC_TAKEWHILE`
+- `CPC_TAKEWHILE1`
