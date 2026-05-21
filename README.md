@@ -25,5 +25,5 @@ Basic combinators:
 
 Others:
 
-- `CPC_TAKEWHILE`
-- `CPC_TAKEWHILE1`
+- `CPC_TAKE_WHILE`
+- `CPC_TAKE_WHILE_1`

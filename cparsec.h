@@ -49,7 +49,7 @@ static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap, void
   *a = (CpcArena){.items = items, .cap = cap, .offset = 0, .user = user};
 }
 
-typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL, CPC_ERR_TAKEWHILE1 } CpcResKind;
+typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL, CPC_ERR_TAKE_WHILE_1 } CpcResKind;
 
 // TODO no error reporting
 // returns the accepted output value and the rest of the string as another slice
@@ -187,29 +187,27 @@ CPC_DEFINE_PARSER(name) {         \
   return (fn)(A, &r.out, r.rest); \
 }
 
-// Consume input as long as the predicate returns True, and return the consumed input.
-// This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
-#define CPC_TAKEWHILE(name, pred)                                                                       \
+
+#define ___CPC_TAKE_WHILE(name, pred, validate)                                                         \
 CPC_DEFINE_PARSER(name) {                                                                               \
   (void)A;                                                                                              \
   size_t i = 0;                                                                                         \
   while (i < input.len && (pred)(input.ptr[i]))                                                         \
     i++;                                                                                                \
+  validate;                                                                                             \
   /* return the success from [0..i] and the rest from [i..len-i] */                                     \
   return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)), cpc_slice_sub(input, i, input.len - i)); \
 }
 
 // Consume input as long as the predicate returns True, and return the consumed input.
-// This parser requires the predicate to succeed on at least one char of input: it will fail if the predicate never returns True or if there is no input left.
-#define CPC_TAKEWHILE1(name, pred)                                                                       \
-CPC_DEFINE_PARSER(name) {                                                                               \
-  (void)A;                                                                                              \
-  size_t i = 0;                                                                                         \
-  while (i < input.len && (pred)(input.ptr[i]))                                                         \
-    i++;                                                                                                \
-  if (i < 1) return cpc_res_err(input, CPC_ERR_TAKEWHILE1);                                             \
-  return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)), cpc_slice_sub(input, i, input.len - i)); \
-}
+// This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
+#define CPC_TAKE_WHILE_1(name, pred)                                                                 \
+  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, CPC_ERR_TAKE_WHILE_1))
+
+// Consume input as long as the predicate returns True, and return the consumed input.
+// This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
+#define CPC_TAKE_WHILE(name, pred)       \
+  ___CPC_TAKE_WHILE(name, pred, (void)0)
 
 #endif /* CPARSEC_H_INCLUDED */
 
