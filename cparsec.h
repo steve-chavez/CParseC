@@ -199,12 +199,12 @@ CPC_DEFINE_PARSER(name) {                                                       
   return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)), cpc_slice_sub(input, i, input.len - i)); \
 }
 
-// Consume input as long as the predicate returns True, and return the consumed input.
-// This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
+// Consume input as long as the predicate returns true, and return the consumed input.
+// This parser requires the predicate to succeed on at least one char of input: it will fail if the predicate never returns true or if there is no input left.
 #define CPC_TAKE_WHILE_1(name, pred)                                                                 \
   ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, CPC_ERR_TAKE_WHILE_1))
 
-// Consume input as long as the predicate returns True, and return the consumed input.
+// Consume input as long as the predicate returns true, and return the consumed input.
 // This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
 #define CPC_TAKE_WHILE(name, pred)       \
   ___CPC_TAKE_WHILE(name, pred, (void)0)
