@@ -32,3 +32,4 @@ Others:
 - `CPC_MANY`
 - `CPC_MANY_1`
 - `CPC_MANY_TILL`
+- `CPC_SEP_BY`

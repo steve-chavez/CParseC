@@ -49,6 +49,11 @@ static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap, void
   *a = (CpcArena){.items = items, .cap = cap, .offset = 0, .user = user};
 }
 
+// reset the arena offset
+static inline void cpc_arena_reset(CpcArena *a) {
+  a->offset = 0;
+}
+
 typedef enum {
   CPC_OK = 1,
   CPC_ERR_STRING,
@@ -59,6 +64,7 @@ typedef enum {
   CPC_ERR_MANY_NO_PROGRESS,
   CPC_ERR_MANY_1,
   CPC_ERR_MANY_TILL_NO_PROGRESS,
+  CPC_ERR_SEP_BY_NO_PROGRESS,
 } CpcResKind;
 
 // TODO no error reporting
@@ -279,6 +285,43 @@ CPC_DEFINE_PARSER(name) {                                                       
                                                                                   \
     cur = ritem.rest;                                                             \
   }                                                                               \
+}
+
+#define CPC_SEP_BY(name, sep, item)                                       \
+CPC_DEFINE_PARSER(name) {                                                 \
+  CpcValue  out   = cpc_val_list(A);                                      \
+  CpcSlice  cur   = input;                                                \
+  CpcResult first = (item)(A, cur);                                       \
+  if (!cpc_is_ok(first)) {                                                \
+    return cpc_res_ok(out, input);                                        \
+  }                                                                       \
+                                                                          \
+  CpcResKind resk = cpc_val_list_push(A, &out, first.out);                \
+  if (resk != CPC_OK)                                                     \
+    return cpc_res_err(input, resk);                                      \
+                                                                          \
+  cur = first.rest;                                                       \
+  /* this loop will always terminate, see below conditions */             \
+  for (;;) {                                                              \
+    CpcSlice  before_sep = cur;                                           \
+    CpcResult rsep       = (sep)(A, cur);                                 \
+    if (!cpc_is_ok(rsep)) {                                               \
+      break;                                                              \
+    }                                                                     \
+    CpcResult next = (item)(A, rsep.rest);                                \
+    if (!cpc_is_ok(next)) {                                               \
+      break;                                                              \
+    }                                                                     \
+                                                                          \
+    CpcResKind resk = cpc_val_list_push(A, &out, next.out);               \
+    if (resk != CPC_OK)                                                   \
+      return cpc_res_err(input, resk);                                    \
+                                                                          \
+    cur = next.rest;                                                      \
+    if (cur.ptr == before_sep.ptr && cur.len == before_sep.len)           \
+      return cpc_res_err(input, CPC_ERR_SEP_BY_NO_PROGRESS);              \
+  }                                                                       \
+  return cpc_res_ok(out, cur);                                            \
 }
 
 #endif /* CPARSEC_H_INCLUDED */
