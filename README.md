@@ -8,10 +8,13 @@ Features:
 
 Pending for CSV example:
 
-- [ ] many
 - [ ] manyTill
 - [ ] sepBy1
 - [ ] <?>
+
+## Differences with Haskell
+
+- Parsers always terminate
 
 ## Features
 
@@ -27,3 +30,4 @@ Others:
 
 - `CPC_TAKE_WHILE`
 - `CPC_TAKE_WHILE_1`
+- `CPC_MANY`

@@ -49,7 +49,7 @@ static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap, void
   *a = (CpcArena){.items = items, .cap = cap, .offset = 0, .user = user};
 }
 
-typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL, CPC_ERR_TAKE_WHILE_1 } CpcResKind;
+typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL, CPC_ERR_TAKE_WHILE_1, CPC_ERR_MANY_NO_PROGRESS } CpcResKind;
 
 // TODO no error reporting
 // returns the accepted output value and the rest of the string as another slice
@@ -208,6 +208,32 @@ CPC_DEFINE_PARSER(name) {                                                       
 // This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
 #define CPC_TAKE_WHILE(name, pred)       \
   ___CPC_TAKE_WHILE(name, pred, (void)0)
+
+
+// Parses zero or more occurrences of the given parser.
+// Unlike the Haskell version this will always terminate, even when paired with takewhile.
+#define CPC_MANY(name, parser)                                                    \
+CPC_DEFINE_PARSER(name) {                                                         \
+  CpcValue out   = cpc_val_list(A);                                               \
+  CpcSlice cur   = input;                                                         \
+  /* this loop will always terminate, see below conditions */                     \
+  for (;;) {                                                                      \
+    CpcResult r = (parser)(A, cur);                                               \
+    if (!cpc_is_ok(r)) {                                                          \
+      break;                                                                      \
+    }                                                                             \
+    /* if the above parser doesn't consume any input, let's return early */       \
+    if (r.rest.ptr == cur.ptr && r.rest.len == cur.len)                           \
+      return cpc_res_err(input, CPC_ERR_MANY_NO_PROGRESS);                        \
+    /* even if the above condition wasn't present, the loop will always finish */ \
+    /* because the arena has a capacity */                                        \
+    CpcResKind resk = cpc_val_list_push(A, &out, r.out);                          \
+    if (resk != CPC_OK)                                                           \
+      return cpc_res_err(input, resk);                                            \
+    cur = r.rest;                                                                 \
+  }                                                                               \
+  return cpc_res_ok(out, cur);                                                    \
+}
 
 #endif /* CPARSEC_H_INCLUDED */
 
