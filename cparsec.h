@@ -56,7 +56,8 @@ typedef enum {
   CPC_ERR_NO_ARENA,
   CPC_ERR_ARENA_FULL,
   CPC_ERR_TAKE_WHILE_1,
-  CPC_ERR_MANY_NO_PROGRESS
+  CPC_ERR_MANY_NO_PROGRESS,
+  CPC_ERR_MANY_1,
 } CpcResKind;
 
 // TODO no error reporting
@@ -218,12 +219,12 @@ CPC_DEFINE_PARSER(name) {                                                       
   ___CPC_TAKE_WHILE(name, pred, (void)0)
 
 
-// Parses zero or more occurrences of the given parser.
-// Unlike the Haskell version this will always terminate, even when paired with takewhile.
-#define CPC_MANY(name, parser)                                                    \
+#define ___CPC_MANY(name, parser, min_count)                                      \
 CPC_DEFINE_PARSER(name) {                                                         \
   CpcValue out   = cpc_val_list(A);                                               \
   CpcSlice cur   = input;                                                         \
+  size_t   count = 0;                                                             \
+  size_t   min   = (size_t)(min_count);                                           \
   /* this loop will always terminate, see below conditions */                     \
   for (;;) {                                                                      \
     CpcResult r = (parser)(A, cur);                                               \
@@ -239,9 +240,17 @@ CPC_DEFINE_PARSER(name) {                                                       
     if (resk != CPC_OK)                                                           \
       return cpc_res_err(input, resk);                                            \
     cur = r.rest;                                                                 \
+    count++;                                                                      \
   }                                                                               \
-  return cpc_res_ok(out, cur);                                                    \
+  return count < min ? cpc_res_err(input, CPC_ERR_MANY_1) : cpc_res_ok(out, cur); \
 }
+
+// Parses zero or more occurrences of the given parser.
+// Unlike the Haskell version this will always terminate, even when paired with takewhile.
+#define CPC_MANY(name, parser)   ___CPC_MANY(name, parser, 0)
+
+// Parses one or more occurrences of the given parser.
+#define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1)
 
 #endif /* CPARSEC_H_INCLUDED */
 

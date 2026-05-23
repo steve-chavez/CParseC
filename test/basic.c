@@ -52,6 +52,8 @@ static inline bool is_space(char c){
 CPC_TAKE_WHILE(p_is_space, is_space);
 CPC_MANY(p_inf_many_spaces, p_is_space);
 
+CPC_MANY_1(p_many_1_a, p_a);
+
 int main() {
   {
     puts("Succeeds over the whole string...");
@@ -205,6 +207,36 @@ int main() {
       CpcResult result = p_inf_many_spaces(NULL, cpc_slice_from_cstr("anything"));
 
       assert(result.kind == CPC_ERR_MANY_NO_PROGRESS);
+    }
+  }
+
+  {
+    puts("The many1 parser succeeds...");
+
+    CpcValue arena_storage[10];
+    CpcArena arena;
+    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
+
+    {
+      CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAb"));
+
+      assert(cpc_is_ok(result));
+      assert(cpc_is_list(&result.out));
+      assert(result.out.as.list.len == 3);
+      for(size_t i = 0; i < result.out.as.list.len; i++){
+        CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
+        assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
+      }
+      assert(strncmp(result.rest.ptr, "b", result.rest.len) == 0);
+    }
+
+    puts("The many1 parser fails...");
+
+    {
+      CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("bAAAAb"));
+
+      assert(!cpc_is_ok(result));
+      assert(strncmp(result.rest.ptr, "bAAAAb", result.rest.len) == 0);
     }
   }
 

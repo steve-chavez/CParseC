@@ -31,3 +31,4 @@ Others:
 - `CPC_TAKE_WHILE`
 - `CPC_TAKE_WHILE_1`
 - `CPC_MANY`
+- `CPC_MANY_1`
