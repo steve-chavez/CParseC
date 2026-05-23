@@ -208,6 +208,15 @@ int main() {
 
       assert(result.kind == CPC_ERR_MANY_NO_PROGRESS);
     }
+
+    puts("The many parser will fail if the arena doesn't have enough capacity...");
+
+    {
+      CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.kind == CPC_ERR_ARENA_FULL);
+    }
   }
 
   {
@@ -237,6 +246,15 @@ int main() {
 
       assert(!cpc_is_ok(result));
       assert(strncmp(result.rest.ptr, "bAAAAb", result.rest.len) == 0);
+    }
+
+    puts("The many1 parser will fail if the arena doesn't have enough capacity...");
+
+    {
+      CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.kind == CPC_ERR_ARENA_FULL);
     }
   }
 
