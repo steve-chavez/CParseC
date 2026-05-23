@@ -54,6 +54,10 @@ CPC_MANY(p_inf_many_spaces, p_is_space);
 
 CPC_MANY_1(p_many_1_a, p_a);
 
+CPC_MANY_TILL(p_many_a_till_semicol, p_a, p_semicol);
+
+CPC_MANY_TILL(p_inf_many_spaces_till_b, p_is_space, p_b);
+
 int main() {
   {
     puts("Succeeds over the whole string...");
@@ -264,6 +268,55 @@ int main() {
 
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.kind == CPC_ERR_ARENA_FULL);
+    }
+  }
+
+  {
+    CpcValue arena_storage[10];
+    CpcArena arena;
+    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
+
+    {
+      puts("The manytill parser succeeds...");
+
+      CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAA;"));
+
+      assert(cpc_is_ok(result));
+      assert(cpc_is_list(&result.out));
+      assert(result.out.as.list.len == 9);
+      for(size_t i = 0; i < result.out.as.list.len; i++){
+        CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
+        assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
+      }
+      assert(result.rest.len == 0);
+    }
+
+    {
+      puts("The manytill parser fails...");
+
+      CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("bb"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.rest.len != 0);
+      assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
+    }
+
+    {
+      puts("The manytill parser will always finish...");
+
+      CpcResult result = p_inf_many_spaces_till_b(&arena, cpc_slice_from_cstr("abc"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.kind == CPC_ERR_MANY_TILL_NO_PROGRESS);
+    }
+
+    {
+      puts("The manytill parser will fail if the arena doesn't have enough capacity...");
+
+      CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
       assert(!cpc_is_ok(result));
       assert(result.kind == CPC_ERR_ARENA_FULL);

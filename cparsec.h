@@ -58,6 +58,7 @@ typedef enum {
   CPC_ERR_TAKE_WHILE_1,
   CPC_ERR_MANY_NO_PROGRESS,
   CPC_ERR_MANY_1,
+  CPC_ERR_MANY_TILL_NO_PROGRESS,
 } CpcResKind;
 
 // TODO no error reporting
@@ -251,6 +252,34 @@ CPC_DEFINE_PARSER(name) {                                                       
 
 // Parses one or more occurrences of the given parser.
 #define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1)
+
+// Parses zero or more occurrences of parser `item`, until parser `end` succeeds. Returns a list of values returned by p.
+#define CPC_MANY_TILL(name, item, end)                                            \
+CPC_DEFINE_PARSER(name) {                                                         \
+  CpcValue out = cpc_val_list(A);                                                 \
+  CpcSlice cur = input;                                                           \
+  /* this loop will always terminate, see below conditions */                     \
+  for (;;) {                                                                      \
+    CpcResult rend = (end)(A, cur);                                               \
+    if (cpc_is_ok(rend))                                                          \
+      return cpc_res_ok(out, rend.rest);                                          \
+                                                                                  \
+    CpcResult ritem = (item)(A, cur);                                             \
+    if (!cpc_is_ok(ritem))                                                        \
+      return ritem;                                                               \
+                                                                                  \
+    /* if the above parser doesn't consume any input, let's return early */       \
+    if (ritem.rest.ptr == cur.ptr && ritem.rest.len == cur.len)                   \
+      return cpc_res_err(input, CPC_ERR_MANY_TILL_NO_PROGRESS);                   \
+    /* even if the above condition wasn't present, the loop will always finish */ \
+    /* because the arena has a capacity */                                        \
+    CpcResKind resk = cpc_val_list_push(A, &out, ritem.out);                      \
+    if (resk != CPC_OK)                                                           \
+      return cpc_res_err(input, resk);                                            \
+                                                                                  \
+    cur = ritem.rest;                                                             \
+  }                                                                               \
+}
 
 #endif /* CPARSEC_H_INCLUDED */
 
