@@ -49,7 +49,15 @@ static inline void cpc_arena_init(CpcArena *a, CpcValue *items, size_t cap, void
   *a = (CpcArena){.items = items, .cap = cap, .offset = 0, .user = user};
 }
 
-typedef enum { CPC_OK = 1, CPC_ERR, CPC_ERR_NO_LIST, CPC_ERR_NO_ARENA, CPC_ERR_ARENA_FULL, CPC_ERR_TAKE_WHILE_1, CPC_ERR_MANY_NO_PROGRESS } CpcResKind;
+typedef enum {
+  CPC_OK = 1,
+  CPC_ERR_STRING,
+  CPC_ERR_NO_LIST,
+  CPC_ERR_NO_ARENA,
+  CPC_ERR_ARENA_FULL,
+  CPC_ERR_TAKE_WHILE_1,
+  CPC_ERR_MANY_NO_PROGRESS
+} CpcResKind;
 
 // TODO no error reporting
 // returns the accepted output value and the rest of the string as another slice
@@ -119,11 +127,11 @@ CPC_DEFINE_PARSER(name) {                                                       
   const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                                                \
                                                                                                                                 \
   if (input.len < slice.len) /* short circuit a too short string */                                                             \
-    return cpc_res_err(input, CPC_ERR);                                                                                         \
+    return cpc_res_err(input, CPC_ERR_STRING);                                                                                  \
                                                                                                                                 \
   for (size_t i = 0; i < slice.len; ++i)                                                                                        \
     if (input.ptr[i] != slice.ptr[i]) /* mismatch */                                                                            \
-      return cpc_res_err(input, CPC_ERR);                                                                                       \
+      return cpc_res_err(input, CPC_ERR_STRING);                                                                                \
                                                                                                                                 \
   return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)), cpc_slice_sub(input, slice.len, input.len - slice.len)); \
 }
