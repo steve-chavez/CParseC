@@ -61,6 +61,7 @@ int main() {
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("BEGIN leftovers"));
     assert(cpc_is_ok(result));
     assert(strncmp(result.out.as.slice.ptr, "BEGIN", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
@@ -70,6 +71,7 @@ int main() {
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("unknown leftovers"));
     assert(!cpc_is_ok(result));
     assert(result.out.as.slice.len == 0);
+    assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "unknown leftovers", result.rest.len) == 0);
   }
 
@@ -79,6 +81,7 @@ int main() {
     CpcResult result = p_combined(NULL, cpc_slice_from_cstr("END leftovers"));
     assert(cpc_is_ok(result));
     assert(strncmp(result.out.as.slice.ptr, "END", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
   }
 
@@ -123,6 +126,7 @@ int main() {
 
     assert(cpc_is_ok(result));
     assert(strncmp(result.out.as.slice.ptr, "aaaaaaaaaa", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bbbbb", result.rest.len) == 0);
 
     puts("The takewhile parser never fails...");
@@ -131,6 +135,7 @@ int main() {
 
     assert(cpc_is_ok(result2));
     assert(strncmp(result2.out.as.slice.ptr, "aa", result2.out.as.slice.len) == 0);
+    assert(result2.rest.len != 0);
     assert(strncmp(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
 
     puts("The takewhile parser never fails, it returns empty string if the pred returns false at first char...");
@@ -139,6 +144,7 @@ int main() {
 
     assert(cpc_is_ok(result1));
     assert(strncmp(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
+    assert(result1.rest.len != 0);
     assert(strncmp(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
   }
 
@@ -149,6 +155,7 @@ int main() {
 
     assert(cpc_is_ok(result));
     assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
 
     puts("The takewhile1 parser does fail...");
@@ -158,6 +165,7 @@ int main() {
     assert(!cpc_is_ok(result2));
     assert(result2.kind == CPC_ERR_TAKE_WHILE_1);
     assert(strncmp(result2.out.as.slice.ptr, "", result2.out.as.slice.len) == 0);
+    assert(result2.rest.len != 0);
     assert(strncmp(result2.rest.ptr, "bba", result2.rest.len) == 0);
 
     puts("The takewhile1 parser fails on empty input...");
@@ -167,7 +175,7 @@ int main() {
     assert(!cpc_is_ok(result3));
     assert(result3.kind == CPC_ERR_TAKE_WHILE_1);
     assert(strncmp(result3.out.as.slice.ptr, "", result3.out.as.slice.len) == 0);
-    assert(strncmp(result3.rest.ptr, "", result3.rest.len) == 0);
+    assert(result3.rest.len == 0);
   }
 
   {
@@ -187,6 +195,7 @@ int main() {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
+      assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "b", result.rest.len) == 0);
     }
 
@@ -198,6 +207,7 @@ int main() {
       assert(cpc_is_ok(result));
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 0);
+      assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "aaaab", result.rest.len) == 0);
     }
 
@@ -236,6 +246,7 @@ int main() {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
+      assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "b", result.rest.len) == 0);
     }
 
@@ -245,6 +256,7 @@ int main() {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("bAAAAb"));
 
       assert(!cpc_is_ok(result));
+      assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "bAAAAb", result.rest.len) == 0);
     }
 
