@@ -112,7 +112,7 @@ int main() {
   }
 
   {
-    CpcValue arena_storage[2];
+    CpcValue arena_storage[2] = {0};
     CpcArena arena;
     Pair pair = {0};
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &pair);
@@ -189,7 +189,7 @@ int main() {
   {
     puts("The many parser succeeds...");
 
-    CpcValue arena_storage[10];
+    CpcValue arena_storage[10] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
@@ -240,7 +240,7 @@ int main() {
   {
     puts("The many1 parser succeeds...");
 
-    CpcValue arena_storage[10];
+    CpcValue arena_storage[10] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
@@ -279,7 +279,7 @@ int main() {
   }
 
   {
-    CpcValue arena_storage[10];
+    CpcValue arena_storage[10] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
@@ -328,7 +328,7 @@ int main() {
   }
 
   {
-    CpcValue arena_storage[6];
+    CpcValue arena_storage[6] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 

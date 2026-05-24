@@ -122,6 +122,12 @@ static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue 
   return &A->items[list->as.list.start + i];
 }
 
+// If the current slice is the same as the previous slice, no progress was made
+// This condition ensures all of the zero occurrences parsers succeed.
+static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev) {
+  return (cur.ptr == prev.ptr && cur.len == prev.len);
+}
+
 #define CPC_DEFINE_PARSER(name)                                                                \
   static inline CpcResult name(__attribute__ ((unused)) CpcArena *A, CpcSlice input)
 
@@ -238,8 +244,7 @@ CPC_DEFINE_PARSER(name) {                                                       
     if (!cpc_is_ok(r)) {                                                          \
       break;                                                                      \
     }                                                                             \
-    /* if the above parser doesn't consume any input, let's return early */       \
-    if (r.rest.ptr == cur.ptr && r.rest.len == cur.len)                           \
+    if (cpc_no_progress_made(r.rest, cur))                                        \
       return cpc_res_err(input, CPC_ERR_MANY_NO_PROGRESS);                        \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
@@ -274,8 +279,7 @@ CPC_DEFINE_PARSER(name) {                                                       
     if (!cpc_is_ok(ritem))                                                        \
       return ritem;                                                               \
                                                                                   \
-    /* if the above parser doesn't consume any input, let's return early */       \
-    if (ritem.rest.ptr == cur.ptr && ritem.rest.len == cur.len)                   \
+    if (cpc_no_progress_made(ritem.rest, cur))                                    \
       return cpc_res_err(input, CPC_ERR_MANY_TILL_NO_PROGRESS);                   \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
@@ -318,7 +322,7 @@ CPC_DEFINE_PARSER(name) {                                                 \
       return cpc_res_err(input, resk);                                    \
                                                                           \
     cur = next.rest;                                                      \
-    if (cur.ptr == before_sep.ptr && cur.len == before_sep.len)           \
+    if (cpc_no_progress_made(cur, before_sep))                            \
       return cpc_res_err(input, CPC_ERR_SEP_BY_NO_PROGRESS);              \
   }                                                                       \
   return cpc_res_ok(out, cur);                                            \
