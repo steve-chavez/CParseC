@@ -8,7 +8,8 @@ Features:
 
 Pending for CSV example:
 
-- [ ] <?>
+- [ ] `endOfInput`
+- [ ] `<?>` (`label`)
 
 ## Differences with Haskell
 
