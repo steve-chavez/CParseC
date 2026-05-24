@@ -67,6 +67,7 @@ typedef enum {
   CPC_ERR_SEP_BY_NO_PROGRESS,
   CPC_ERR_SEP_BY_1_NO_PROGRESS,
   CPC_ERR_SEP_BY_1,
+  CPC_ERR_EOF,
 } CpcResKind;
 
 // TODO no error reporting
@@ -95,6 +96,10 @@ static inline CpcValue cpc_val_slice(CpcSlice s) {
 
 static inline CpcValue cpc_val_list(CpcArena *A) {
   return (CpcValue){.kind = CPC_LIST, .as.list = {.start = A->offset, .len = 0}};
+}
+
+static inline CpcValue cpc_val_nothing(void) {
+  return (CpcValue){.kind = CPC_NOTHING};
 }
 
 static inline CpcValue cpc_val_ptr(void *p) {
@@ -336,6 +341,11 @@ CPC_DEFINE_PARSER(name) {                                                 \
 
 #define CPC_SEP_BY_1(name, sep, item) \
   ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, CPC_ERR_SEP_BY_1), CPC_ERR_SEP_BY_1_NO_PROGRESS)
+
+// parser that only matches if all the input has been consumed
+CPC_DEFINE_PARSER(cpc_parser_eof){
+  return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, CPC_ERR_EOF);
+}
 
 #endif /* CPARSEC_H_INCLUDED */
 

@@ -434,5 +434,24 @@ int main() {
     }
   }
 
+  {
+    puts("The eof parser succeeds...");
+
+    CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr(""));
+
+    assert(cpc_is_ok(result));
+    assert(result.rest.len == 0);
+  }
+
+  {
+    puts("The eof parser fails...");
+
+    CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr("A"));
+
+    assert(!cpc_is_ok(result));
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "A", result.rest.len) == 0);
+  }
+
   return EXIT_SUCCESS;
 }
