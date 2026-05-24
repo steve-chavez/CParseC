@@ -65,6 +65,8 @@ typedef enum {
   CPC_ERR_MANY_1,
   CPC_ERR_MANY_TILL_NO_PROGRESS,
   CPC_ERR_SEP_BY_NO_PROGRESS,
+  CPC_ERR_SEP_BY_1_NO_PROGRESS,
+  CPC_ERR_SEP_BY_1,
 } CpcResKind;
 
 // TODO no error reporting
@@ -291,13 +293,13 @@ CPC_DEFINE_PARSER(name) {                                                       
   }                                                                               \
 }
 
-#define CPC_SEP_BY(name, sep, item)                                       \
+#define ___CPC_SEP_BY(name, sep, item, first_not_ok, err_no_progress)     \
 CPC_DEFINE_PARSER(name) {                                                 \
   CpcValue  out   = cpc_val_list(A);                                      \
   CpcSlice  cur   = input;                                                \
   CpcResult first = (item)(A, cur);                                       \
   if (!cpc_is_ok(first)) {                                                \
-    return cpc_res_ok(out, input);                                        \
+    return first_not_ok;                                                  \
   }                                                                       \
                                                                           \
   CpcResKind resk = cpc_val_list_push(A, &out, first.out);                \
@@ -323,10 +325,16 @@ CPC_DEFINE_PARSER(name) {                                                 \
                                                                           \
     cur = next.rest;                                                      \
     if (cpc_no_progress_made(cur, before_sep))                            \
-      return cpc_res_err(input, CPC_ERR_SEP_BY_NO_PROGRESS);              \
+      return cpc_res_err(input, err_no_progress);                         \
   }                                                                       \
   return cpc_res_ok(out, cur);                                            \
 }
+
+#define CPC_SEP_BY(name, sep, item) \
+  ___CPC_SEP_BY(name, sep, item, cpc_res_ok(out, input), CPC_ERR_SEP_BY_NO_PROGRESS)
+
+#define CPC_SEP_BY_1(name, sep, item) \
+  ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, CPC_ERR_SEP_BY_1), CPC_ERR_SEP_BY_1_NO_PROGRESS)
 
 #endif /* CPARSEC_H_INCLUDED */
 

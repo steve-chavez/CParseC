@@ -62,6 +62,20 @@ CPC_SEP_BY(p_A_sep_by_space, p_is_space, p_a);
 
 CPC_SEP_BY(p_inf_space_sep_by_inf_space, p_is_space, p_is_space);
 
+CPC_SEP_BY_1(p_A_sep_by_1_space, p_is_space, p_a);
+
+static inline bool is_comma(char c){
+  return c == ',';
+}
+CPC_TAKE_WHILE(p_take_while_comma, is_comma);
+
+static inline bool is_not_comma(char c){
+  return c != ',';
+}
+CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma);
+
+CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_not_comma, p_take_while_comma);
+
 int main() {
   {
     puts("Succeeds over the whole string...");
@@ -377,6 +391,46 @@ int main() {
 
       assert(!cpc_is_ok(result));
       assert(result.kind == CPC_ERR_SEP_BY_NO_PROGRESS);
+    }
+  }
+
+  {
+    CpcValue arena_storage[6] = {0};
+    CpcArena arena;
+    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
+
+    {
+      puts("The sepby1 parser succeeds...");
+
+      CpcResult result = p_A_sep_by_1_space(&arena, cpc_slice_from_cstr("A A A A B"));
+
+      assert(cpc_is_ok(result));
+      assert(cpc_is_list(&result.out));
+      assert(result.out.as.list.len == 4);
+      for(size_t i = 0; i < result.out.as.list.len; i++){
+        CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
+        assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
+      }
+      assert(result.rest.len != 0);
+      assert(strncmp(result.rest.ptr, " B", result.rest.len) == 0);
+    }
+
+    {
+      puts("The sepby1 parser fails...");
+
+      CpcResult result = p_A_sep_by_1_space(&arena, cpc_slice_from_cstr("B A A"));
+
+      assert(!cpc_is_ok(result));
+      assert(result.rest.len != 0);
+      assert(strncmp(result.rest.ptr, "B A A", result.rest.len) == 0);
+    }
+
+    {
+      puts("The sepby1 parser will always finish...");
+
+      CpcResult result = p_inf_sep_by_1(&arena, cpc_slice_from_cstr(","));
+
+      assert(result.kind == CPC_ERR_SEP_BY_1_NO_PROGRESS);
     }
   }
 

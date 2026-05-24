@@ -8,12 +8,11 @@ Features:
 
 Pending for CSV example:
 
-- [ ] sepBy1
 - [ ] <?>
 
 ## Differences with Haskell
 
-- Parsers always terminate (many, manyTill)
+- Parsers always terminate (many, manyTill, sepby, sepby1 can infinite loop in Haskell)
 
 ## Features
 
@@ -33,3 +32,4 @@ Others:
 - `CPC_MANY_1`
 - `CPC_MANY_TILL`
 - `CPC_SEP_BY`
+- `CPC_SEP_BY_1`
