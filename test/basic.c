@@ -50,17 +50,17 @@ static inline bool is_space(char c){
 }
 
 CPC_TAKE_WHILE(p_is_space, is_space);
-CPC_MANY(p_inf_many_spaces, p_is_space);
+CPC_MANY(p_inf_many, p_is_space);
 
 CPC_MANY_1(p_many_1_a, p_a);
 
 CPC_MANY_TILL(p_many_a_till_semicol, p_a, p_semicol);
 
-CPC_MANY_TILL(p_inf_many_spaces_till_b, p_is_space, p_b);
+CPC_MANY_TILL(p_inf_many_till, p_is_space, p_b);
 
 CPC_SEP_BY(p_A_sep_by_space, p_is_space, p_a);
 
-CPC_SEP_BY(p_inf_space_sep_by_inf_space, p_is_space, p_is_space);
+CPC_SEP_BY(p_inf_sep_by, p_is_space, p_is_space);
 
 CPC_SEP_BY_1(p_A_sep_by_1_space, p_is_space, p_a);
 
@@ -236,7 +236,7 @@ int main() {
     puts("The many parser will always finish...");
 
     {
-      CpcResult result = p_inf_many_spaces(NULL, cpc_slice_from_cstr("anything"));
+      CpcResult result = p_inf_many(NULL, cpc_slice_from_cstr("anything"));
 
       assert(result.kind == CPC_ERR_MANY_NO_PROGRESS);
     }
@@ -325,7 +325,7 @@ int main() {
     {
       puts("The manytill parser will always finish...");
 
-      CpcResult result = p_inf_many_spaces_till_b(&arena, cpc_slice_from_cstr("abc"));
+      CpcResult result = p_inf_many_till(&arena, cpc_slice_from_cstr("abc"));
 
       assert(!cpc_is_ok(result));
       assert(result.kind == CPC_ERR_MANY_TILL_NO_PROGRESS);
@@ -387,7 +387,7 @@ int main() {
       puts("The sepby parser will always finish...");
       cpc_arena_reset(&arena);
 
-      CpcResult result = p_inf_space_sep_by_inf_space(&arena, cpc_slice_from_cstr("abc"));
+      CpcResult result = p_inf_sep_by(&arena, cpc_slice_from_cstr("abc"));
 
       assert(!cpc_is_ok(result));
       assert(result.kind == CPC_ERR_SEP_BY_NO_PROGRESS);

@@ -124,8 +124,9 @@ static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue 
   return &A->items[list->as.list.start + i];
 }
 
-// If the current slice is the same as the previous slice, no progress was made
-// This condition ensures all of the zero occurrences parsers succeed.
+// If the current slice is the same as the previous slice, no progress was made.
+// This condition ensures all the parsers never cause infinite loops, which is a problem in Haskell Parsec.
+// See https://hackage.haskell.org/package/attoparsec-0.14.4/docs/Data-Attoparsec-ByteString.html#v:takeWhile
 static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev) {
   return (cur.ptr == prev.ptr && cur.len == prev.len);
 }
