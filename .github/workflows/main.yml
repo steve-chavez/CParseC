@@ -31,5 +31,5 @@ jobs:
       - name: Build
         run: nix-shell --run "make bench"
 
-      - name: Run tests
+      - name: Run bench
         run: nix-shell --run "./bench/bench.sh"

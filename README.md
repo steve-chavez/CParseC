@@ -6,9 +6,6 @@ Features:
 - No hidden allocations, the user must supply an arena
 - Macro-based, no function pointers in hot paths
 
-Pending for CSV example:
-
-
 ## Differences with Haskell
 
 - Parsers always terminate (many, manyTill, sepby, sepby1 can infinite loop in Haskell)
