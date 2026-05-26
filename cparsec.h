@@ -56,26 +56,14 @@ static inline void cpc_arena_reset(CpcArena *a) {
 
 typedef enum {
   CPC_OK = 1,
-  CPC_ERR_STRING,
-  CPC_ERR_NO_LIST,
-  CPC_ERR_NO_ARENA,
-  CPC_ERR_ARENA_FULL,
-  CPC_ERR_TAKE_WHILE_1,
-  CPC_ERR_MANY_NO_PROGRESS,
-  CPC_ERR_MANY_1,
-  CPC_ERR_MANY_TILL_NO_PROGRESS,
-  CPC_ERR_SEP_BY_NO_PROGRESS,
-  CPC_ERR_SEP_BY_1_NO_PROGRESS,
-  CPC_ERR_SEP_BY_1,
-  CPC_ERR_EOF,
 } CpcResKind;
 
-// TODO no error reporting
 // returns the accepted output value and the rest of the string as another slice
 typedef struct {
   CpcResKind kind;
   CpcValue   out;
   CpcSlice   rest;
+  const char *err;
 } CpcResult;
 
 static inline bool cpc_is_ok(CpcResult res) {
@@ -86,8 +74,8 @@ static inline CpcResult cpc_res_ok(CpcValue out, CpcSlice rest) {
   return (CpcResult){.out = out, .rest = rest, .kind = CPC_OK};
 }
 
-static inline CpcResult cpc_res_err(CpcSlice rest, CpcResKind kind) {
-  return (CpcResult){.out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .kind = kind};
+static inline CpcResult cpc_res_err(CpcSlice rest, const char *err) {
+  return (CpcResult){.out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .err = err};
 }
 
 static inline CpcValue cpc_val_slice(CpcSlice s) {
@@ -110,18 +98,19 @@ static inline bool cpc_is_list(const CpcValue *v) {
   return v && v->kind == CPC_LIST;
 }
 
-static inline CpcResKind cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue x) {
+static inline bool cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue x) {
+  // TODO differentiate between these errors
   if (!A)
-    return CPC_ERR_NO_ARENA;
+    return false;
   if (!cpc_is_list(list))
-    return CPC_ERR_NO_LIST;
+    return false;
   if (A->offset >= A->cap)
-    return CPC_ERR_ARENA_FULL;
+    return false;
 
   A->items[A->offset++] = x;
   list->as.list.len++;
 
-  return CPC_OK;
+  return true;
 }
 
 static inline const CpcValue *cpc_val_list_at(const CpcArena *A, const CpcValue *list, size_t i) {
@@ -148,12 +137,12 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 CPC_DEFINE_PARSER(name) {                                                                                                       \
   const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                                                \
                                                                                                                                 \
-  if (input.len < slice.len) /* short circuit a too short string */                                                             \
-    return cpc_res_err(input, CPC_ERR_STRING);                                                                                  \
+  if (input.len < slice.len)                                                                                                    \
+    return cpc_res_err(input, #name ": too short");                                                                           \
                                                                                                                                 \
   for (size_t i = 0; i < slice.len; ++i)                                                                                        \
-    if (input.ptr[i] != slice.ptr[i]) /* mismatch */                                                                            \
-      return cpc_res_err(input, CPC_ERR_STRING);                                                                                \
+    if (input.ptr[i] != slice.ptr[i])                                                                                           \
+      return cpc_res_err(input, #name ": mismatch");                                                                          \
                                                                                                                                 \
   return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)), cpc_slice_sub(input, slice.len, input.len - slice.len)); \
 }
@@ -201,13 +190,11 @@ CPC_DEFINE_PARSER_ARENA(name) {                         \
                                                         \
   CpcValue out = cpc_val_list(A);                       \
                                                         \
-  CpcResKind resk = cpc_val_list_push(A, &out, r1.out); \
-  if (resk != CPC_OK)                                   \
-    return cpc_res_err(r1.rest, resk);                  \
+  if (!cpc_val_list_push(A, &out, r1.out))              \
+    return cpc_res_err(r1.rest, #name ": arena surpassed"); \
                                                         \
-  resk = cpc_val_list_push(A, &out, r2.out);            \
-  if (resk != CPC_OK)                                   \
-    return cpc_res_err(r1.rest, resk);                  \
+  if (!cpc_val_list_push(A, &out, r2.out))              \
+    return cpc_res_err(r1.rest, #name ": arena surpassed"); \
                                                         \
   return cpc_res_ok(out, r2.rest);                      \
 }
@@ -232,7 +219,7 @@ CPC_DEFINE_PARSER(name) {                                                       
 // Consume input as long as the predicate returns true, and return the consumed input.
 // This parser requires the predicate to succeed on at least one char of input: it will fail if the predicate never returns true or if there is no input left.
 #define CPC_TAKE_WHILE_1(name, pred)                                                                 \
-  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, CPC_ERR_TAKE_WHILE_1))
+  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, #name ": too few"))
 
 // Consume input as long as the predicate returns true, and return the consumed input.
 // This parser does not fail. If the predicate returns false at first char, it returns an empty string as the slice.
@@ -253,16 +240,15 @@ CPC_DEFINE_PARSER(name) {                                                       
       break;                                                                      \
     }                                                                             \
     if (cpc_no_progress_made(r.rest, cur))                                        \
-      return cpc_res_err(input, CPC_ERR_MANY_NO_PROGRESS);                        \
+      return cpc_res_err(input, #name ": must consume input");                  \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
-    CpcResKind resk = cpc_val_list_push(A, &out, r.out);                          \
-    if (resk != CPC_OK)                                                           \
-      return cpc_res_err(input, resk);                                            \
+    if (!cpc_val_list_push(A, &out, r.out))                                       \
+      return cpc_res_err(input, #name ": arena surpassed");                     \
     cur = r.rest;                                                                 \
     count++;                                                                      \
   }                                                                               \
-  return count < min ? cpc_res_err(input, CPC_ERR_MANY_1) : cpc_res_ok(out, cur); \
+  return count < min ? cpc_res_err(input, #name ": too few") : cpc_res_ok(out, cur); \
 }
 
 // Parses zero or more occurrences of the given parser.
@@ -288,18 +274,17 @@ CPC_DEFINE_PARSER(name) {                                                       
       return ritem;                                                               \
                                                                                   \
     if (cpc_no_progress_made(ritem.rest, cur))                                    \
-      return cpc_res_err(input, CPC_ERR_MANY_TILL_NO_PROGRESS);                   \
+      return cpc_res_err(input, #name ": must consume input");                  \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
-    CpcResKind resk = cpc_val_list_push(A, &out, ritem.out);                      \
-    if (resk != CPC_OK)                                                           \
-      return cpc_res_err(input, resk);                                            \
+    if (!cpc_val_list_push(A, &out, ritem.out))                                   \
+      return cpc_res_err(input, #name ": arena surpassed");                     \
                                                                                   \
     cur = ritem.rest;                                                             \
   }                                                                               \
 }
 
-#define ___CPC_SEP_BY(name, sep, item, first_not_ok, err_no_progress)     \
+#define ___CPC_SEP_BY(name, sep, item, first_not_ok)     \
 CPC_DEFINE_PARSER(name) {                                                 \
   CpcValue  out   = cpc_val_list(A);                                      \
   CpcSlice  cur   = input;                                                \
@@ -308,9 +293,8 @@ CPC_DEFINE_PARSER(name) {                                                 \
     return first_not_ok;                                                  \
   }                                                                       \
                                                                           \
-  CpcResKind resk = cpc_val_list_push(A, &out, first.out);                \
-  if (resk != CPC_OK)                                                     \
-    return cpc_res_err(input, resk);                                      \
+  if (!cpc_val_list_push(A, &out, first.out))                             \
+    return cpc_res_err(input, #name ": arena surpassed");               \
                                                                           \
   cur = first.rest;                                                       \
   /* this loop will always terminate, see below conditions */             \
@@ -325,26 +309,25 @@ CPC_DEFINE_PARSER(name) {                                                 \
       break;                                                              \
     }                                                                     \
                                                                           \
-    CpcResKind resk = cpc_val_list_push(A, &out, next.out);               \
-    if (resk != CPC_OK)                                                   \
-      return cpc_res_err(input, resk);                                    \
+    if (!cpc_val_list_push(A, &out, next.out))                            \
+      return cpc_res_err(input, #name ": arena surpassed");             \
                                                                           \
     cur = next.rest;                                                      \
     if (cpc_no_progress_made(cur, before_sep))                            \
-      return cpc_res_err(input, err_no_progress);                         \
+      return cpc_res_err(input, #name ": must consume input");          \
   }                                                                       \
   return cpc_res_ok(out, cur);                                            \
 }
 
 #define CPC_SEP_BY(name, sep, item) \
-  ___CPC_SEP_BY(name, sep, item, cpc_res_ok(out, input), CPC_ERR_SEP_BY_NO_PROGRESS)
+  ___CPC_SEP_BY(name, sep, item, cpc_res_ok(out, input))
 
 #define CPC_SEP_BY_1(name, sep, item) \
-  ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, CPC_ERR_SEP_BY_1), CPC_ERR_SEP_BY_1_NO_PROGRESS)
+  ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, #name ": too few"))
 
 // parser that only matches if all the input has been consumed
 CPC_DEFINE_PARSER(cpc_parser_eof){
-  return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, CPC_ERR_EOF);
+  return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, "cpc_parser_eof: expected eof");
 }
 
 #endif /* CPARSEC_H_INCLUDED */
