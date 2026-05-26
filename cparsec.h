@@ -54,28 +54,20 @@ static inline void cpc_arena_reset(CpcArena *a) {
   a->offset = 0;
 }
 
-typedef enum {
-  CPC_OK = 1,
-} CpcResKind;
-
 // returns the accepted output value and the rest of the string as another slice
 typedef struct {
-  CpcResKind kind;
+  bool       ok;
   CpcValue   out;
   CpcSlice   rest;
   const char *err;
 } CpcResult;
 
-static inline bool cpc_is_ok(CpcResult res) {
-  return res.kind == CPC_OK;
-}
-
 static inline CpcResult cpc_res_ok(CpcValue out, CpcSlice rest) {
-  return (CpcResult){.out = out, .rest = rest, .kind = CPC_OK};
+  return (CpcResult){.out = out, .rest = rest, .ok = true};
 }
 
 static inline CpcResult cpc_res_err(CpcSlice rest, const char *err) {
-  return (CpcResult){.out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .err = err};
+  return (CpcResult){.out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .ok = false, .err = err};
 }
 
 static inline CpcValue cpc_val_slice(CpcSlice s) {
@@ -151,7 +143,7 @@ CPC_DEFINE_PARSER(name) {                                                       
 #define CPC_ALT(name, x, y)      \
 CPC_DEFINE_PARSER_ARENA(name) {  \
   CpcResult res = (x)(A, input); \
-  if (cpc_is_ok(res))            \
+  if (res.ok)                    \
     return res;                  \
   else                           \
     return (y)(A, input);        \
@@ -161,7 +153,7 @@ CPC_DEFINE_PARSER_ARENA(name) {  \
 #define CPC_RIGHT(name, x, y)    \
 CPC_DEFINE_PARSER_ARENA(name) {  \
   CpcResult res = (x)(A, input); \
-  if (!cpc_is_ok(res))           \
+  if (!res.ok)                   \
     return res;                  \
   else                           \
     return (y)(A, res.rest);     \
@@ -171,10 +163,10 @@ CPC_DEFINE_PARSER_ARENA(name) {  \
 #define CPC_LEFT(name, x, y)              \
 CPC_DEFINE_PARSER_ARENA(name) {           \
   CpcResult res1 = (x)(A, input);         \
-  if (!cpc_is_ok(res1)) return res1;      \
+  if (!res1.ok) return res1;              \
                                           \
   CpcResult res2 = (y)(A, res1.rest);     \
-  if (!cpc_is_ok(res2)) return res2;      \
+  if (!res2.ok) return res2;              \
                                           \
   return cpc_res_ok(res1.out, res2.rest); \
 }
@@ -184,9 +176,9 @@ CPC_DEFINE_PARSER_ARENA(name) {           \
 #define CPC_APPLY(name, x, y)                           \
 CPC_DEFINE_PARSER_ARENA(name) {                         \
   CpcResult  r1 = (x)(A, input);                        \
-  if (!cpc_is_ok(r1)) return r1;                        \
+  if (!r1.ok) return r1;                                \
   CpcResult  r2 = (y)(A, r1.rest);                      \
-  if (!cpc_is_ok(r2)) return r2;                        \
+  if (!r2.ok) return r2;                                \
                                                         \
   CpcValue out = cpc_val_list(A);                       \
                                                         \
@@ -236,7 +228,7 @@ CPC_DEFINE_PARSER(name) {                                                       
   /* this loop will always terminate, see below conditions */                     \
   for (;;) {                                                                      \
     CpcResult r = (parser)(A, cur);                                               \
-    if (!cpc_is_ok(r)) {                                                          \
+    if (!r.ok) {                                                                  \
       break;                                                                      \
     }                                                                             \
     if (cpc_no_progress_made(r.rest, cur))                                        \
@@ -266,11 +258,11 @@ CPC_DEFINE_PARSER(name) {                                                       
   /* this loop will always terminate, see below conditions */                     \
   for (;;) {                                                                      \
     CpcResult rend = (end)(A, cur);                                               \
-    if (cpc_is_ok(rend))                                                          \
+    if (rend.ok)                                                                  \
       return cpc_res_ok(out, rend.rest);                                          \
                                                                                   \
     CpcResult ritem = (item)(A, cur);                                             \
-    if (!cpc_is_ok(ritem))                                                        \
+    if (!ritem.ok)                                                                \
       return ritem;                                                               \
                                                                                   \
     if (cpc_no_progress_made(ritem.rest, cur))                                    \
@@ -289,7 +281,7 @@ CPC_DEFINE_PARSER(name) {                                                 \
   CpcValue  out   = cpc_val_list(A);                                      \
   CpcSlice  cur   = input;                                                \
   CpcResult first = (item)(A, cur);                                       \
-  if (!cpc_is_ok(first)) {                                                \
+  if (!first.ok) {                                                        \
     return first_not_ok;                                                  \
   }                                                                       \
                                                                           \
@@ -301,11 +293,11 @@ CPC_DEFINE_PARSER(name) {                                                 \
   for (;;) {                                                              \
     CpcSlice  before_sep = cur;                                           \
     CpcResult rsep       = (sep)(A, cur);                                 \
-    if (!cpc_is_ok(rsep)) {                                               \
+    if (!rsep.ok) {                                                       \
       break;                                                              \
     }                                                                     \
     CpcResult next = (item)(A, rsep.rest);                                \
-    if (!cpc_is_ok(next)) {                                               \
+    if (!next.ok) {                                                       \
       break;                                                              \
     }                                                                     \
                                                                           \

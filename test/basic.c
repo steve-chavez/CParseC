@@ -81,7 +81,7 @@ int main() {
     puts("The string parser succeeds...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("BEGIN leftovers"));
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "BEGIN", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
@@ -91,7 +91,7 @@ int main() {
     puts("The string parser fails if there's a mismatch...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("unknown leftovers"));
-    assert(!cpc_is_ok(result));
+    assert(!result.ok);
     assert(result.out.as.slice.len == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "unknown leftovers", result.rest.len) == 0);
@@ -102,7 +102,7 @@ int main() {
     puts("The string parser fails if the input is too short...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("a"));
-    assert(!cpc_is_ok(result));
+    assert(!result.ok);
     assert(result.out.as.slice.len == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "a", result.rest.len) == 0);
@@ -113,7 +113,7 @@ int main() {
     puts("The alternative parser works...");
 
     CpcResult result = p_combined(NULL, cpc_slice_from_cstr("END leftovers"));
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "END", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
@@ -123,7 +123,7 @@ int main() {
     puts("The right parser works...");
 
     CpcResult result = p_valnum(NULL, cpc_slice_from_cstr("value=12345"));
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "12345", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
@@ -132,7 +132,7 @@ int main() {
     puts("The left parser works...");
 
     CpcResult result = p_stmt(NULL, cpc_slice_from_cstr("select 1;"));
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "select 1", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
@@ -147,7 +147,7 @@ int main() {
 
     CpcResult result = p_mapped_ab(&arena, cpc_slice_from_cstr("AB"));
 
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(pair.x == 'A');
     assert(pair.y == 'B');
     assert(result.rest.len == 0);
@@ -158,7 +158,7 @@ int main() {
 
     CpcResult result = p_only_a(NULL, cpc_slice_from_cstr("aaaaaaaaaabbbbb"));
 
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "aaaaaaaaaa", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bbbbb", result.rest.len) == 0);
@@ -167,7 +167,7 @@ int main() {
 
     CpcResult result2 = p_only_a(NULL, cpc_slice_from_cstr("aabbbbbaaaa"));
 
-    assert(cpc_is_ok(result2));
+    assert(result2.ok);
     assert(strncmp(result2.out.as.slice.ptr, "aa", result2.out.as.slice.len) == 0);
     assert(result2.rest.len != 0);
     assert(strncmp(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
@@ -176,7 +176,7 @@ int main() {
 
     CpcResult result1 = p_only_a(NULL, cpc_slice_from_cstr("bbbbbaaaa"));
 
-    assert(cpc_is_ok(result1));
+    assert(result1.ok);
     assert(strncmp(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
     assert(result1.rest.len != 0);
     assert(strncmp(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
@@ -187,7 +187,7 @@ int main() {
 
     CpcResult result = p_at_least_1_a(NULL, cpc_slice_from_cstr("abb"));
 
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
@@ -196,7 +196,7 @@ int main() {
 
     CpcResult result2 = p_at_least_1_a(NULL, cpc_slice_from_cstr("bba"));
 
-    assert(!cpc_is_ok(result2));
+    assert(!result2.ok);
     assert(strcmp(result2.err, "p_at_least_1_a: too few") == 0);
     assert(strncmp(result2.out.as.slice.ptr, "", result2.out.as.slice.len) == 0);
     assert(result2.rest.len != 0);
@@ -206,7 +206,7 @@ int main() {
 
     CpcResult result3 = p_at_least_1_a(NULL, cpc_slice_from_cstr(""));
 
-    assert(!cpc_is_ok(result3));
+    assert(!result3.ok);
     assert(strcmp(result3.err, "p_at_least_1_a: too few") == 0);
     assert(strncmp(result3.out.as.slice.ptr, "", result3.out.as.slice.len) == 0);
     assert(result3.rest.len == 0);
@@ -222,7 +222,7 @@ int main() {
     {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAb"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
       for(size_t i = 0; i < result.out.as.list.len; i++){
@@ -238,7 +238,7 @@ int main() {
     {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("aaaab"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 0);
       assert(result.rest.len != 0);
@@ -258,7 +258,7 @@ int main() {
     {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_many_a: arena surpassed") == 0);
     }
   }
@@ -273,7 +273,7 @@ int main() {
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAb"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 3);
       for(size_t i = 0; i < result.out.as.list.len; i++){
@@ -289,7 +289,7 @@ int main() {
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("bAAAAb"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "bAAAAb", result.rest.len) == 0);
       assert(strcmp(result.err, "p_many_1_a: too few") == 0);
@@ -300,7 +300,7 @@ int main() {
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_many_1_a: arena surpassed") == 0);
     }
   }
@@ -315,7 +315,7 @@ int main() {
 
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAA;"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 9);
       for(size_t i = 0; i < result.out.as.list.len; i++){
@@ -330,7 +330,7 @@ int main() {
 
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("bb"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
     }
@@ -340,7 +340,7 @@ int main() {
 
       CpcResult result = p_inf_many_till(&arena, cpc_slice_from_cstr("abc"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_inf_many_till: must consume input") == 0);
     }
 
@@ -349,7 +349,7 @@ int main() {
 
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_many_a_till_semicol: arena surpassed") == 0);
     }
   }
@@ -364,7 +364,7 @@ int main() {
 
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A B"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
       for(size_t i = 0; i < result.out.as.list.len; i++){
@@ -380,7 +380,7 @@ int main() {
 
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("B B B"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 0);
       assert(result.rest.len != 0);
@@ -392,7 +392,7 @@ int main() {
 
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A A A A A"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_A_sep_by_space: arena surpassed") == 0);
     }
 
@@ -402,7 +402,7 @@ int main() {
 
       CpcResult result = p_inf_sep_by(&arena, cpc_slice_from_cstr("abc"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(strcmp(result.err, "p_inf_sep_by: must consume input") == 0);
     }
   }
@@ -417,7 +417,7 @@ int main() {
 
       CpcResult result = p_A_sep_by_1_space(&arena, cpc_slice_from_cstr("A A A A B"));
 
-      assert(cpc_is_ok(result));
+      assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
       for(size_t i = 0; i < result.out.as.list.len; i++){
@@ -433,7 +433,7 @@ int main() {
 
       CpcResult result = p_A_sep_by_1_space(&arena, cpc_slice_from_cstr("B A A"));
 
-      assert(!cpc_is_ok(result));
+      assert(!result.ok);
       assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "B A A", result.rest.len) == 0);
       assert(strcmp(result.err, "p_A_sep_by_1_space: too few") == 0);
@@ -453,7 +453,7 @@ int main() {
 
     CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr(""));
 
-    assert(cpc_is_ok(result));
+    assert(result.ok);
     assert(result.rest.len == 0);
   }
 
@@ -462,7 +462,7 @@ int main() {
 
     CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr("A"));
 
-    assert(!cpc_is_ok(result));
+    assert(!result.ok);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "A", result.rest.len) == 0);
     assert(strcmp(result.err, "cpc_parser_eof: expected eof") == 0);
