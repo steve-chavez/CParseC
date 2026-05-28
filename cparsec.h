@@ -317,6 +317,16 @@ CPC_DEFINE_PARSER(name) {                                                 \
 #define CPC_SEP_BY_1(name, sep, item) \
   ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, #name ": too few"))
 
+
+// Behave as `parser`, but whenever the `parser` fails without consuming any input, it replaces the builtin error message with `msg`.
+#define CPC_LABEL(name, parser, msg) \
+CPC_DEFINE_PARSER(name) {            \
+  CpcResult r = (parser)(A, input);  \
+  if (r.ok) return r;                \
+  else r.err = (msg);                \
+  return r;                          \
+}
+
 // parser that only matches if all the input has been consumed
 CPC_DEFINE_PARSER(cpc_parser_eof){
   return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, "cpc_parser_eof: expected eof");

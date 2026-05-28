@@ -8,7 +8,6 @@ Features:
 
 Pending for CSV example:
 
-- [ ] `<?>` (`label`)
 
 ## Differences with Haskell
 
@@ -33,4 +32,5 @@ Others:
 - `CPC_MANY_TILL`
 - `CPC_SEP_BY`
 - `CPC_SEP_BY_1`
+- `CPC_LABEL`
 - `cpc_parser_eof`: end of input

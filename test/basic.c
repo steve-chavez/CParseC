@@ -76,6 +76,8 @@ CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma);
 
 CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_not_comma, p_take_while_comma);
 
+CPC_LABEL(p_begin_label, p_begin, "bad bad");
+
 int main() {
   {
     puts("The string parser succeeds...");
@@ -466,6 +468,17 @@ int main() {
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "A", result.rest.len) == 0);
     assert(strcmp(result.err, "cpc_parser_eof: expected eof") == 0);
+  }
+
+  {
+    puts("The label parser works...");
+
+    CpcResult result = p_begin_label(NULL, cpc_slice_from_cstr("BEGAN"));
+
+    assert(!result.ok);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "BEGAN", result.rest.len) == 0);
+    assert(strcmp(result.err, "bad bad") == 0);
   }
 
   return EXIT_SUCCESS;
