@@ -90,6 +90,10 @@ static inline bool cpc_is_list(const CpcValue *v) {
   return v && v->kind == CPC_LIST;
 }
 
+static inline bool cpc_is_slice(const CpcValue *v) {
+  return v && v->kind == CPC_SLICE;
+}
+
 static inline bool cpc_val_list_push(CpcArena *A, CpcValue *list, CpcValue x) {
   // TODO differentiate between these errors
   if (!A)
