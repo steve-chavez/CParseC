@@ -9,6 +9,7 @@ mkShellNoCC {
       gcc15
       clang-tools
       (haskellPackages.ghcWithPackages (p: [ p.attoparsec ]))
+      p7zip
     ];
   shellHook = ''
     export HISTFILE=.history
