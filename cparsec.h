@@ -122,10 +122,10 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 }
 
 #define CPC_DEFINE_PARSER(name)                                                                \
-  static inline CpcResult name(__attribute__ ((unused)) CpcArena *A, CpcSlice input)
+  CpcResult name(__attribute__ ((unused)) CpcArena *A, CpcSlice input)
 
 #define CPC_DEFINE_PARSER_ARENA(name)                                                                \
-  static inline CpcResult name(CpcArena *A, CpcSlice input)
+  CpcResult name(CpcArena *A, CpcSlice input)
 
 // This is more like Parsec `string'`, which doesn't consume the matching prefix.
 // We do this to avoid having a `try` function and working better with `alt`
@@ -332,7 +332,7 @@ CPC_DEFINE_PARSER(name) {            \
 }
 
 // parser that only matches if all the input has been consumed
-CPC_DEFINE_PARSER(cpc_parser_eof){
+static inline CPC_DEFINE_PARSER(cpc_parser_eof){
   return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, "cpc_parser_eof: expected eof");
 }
 
