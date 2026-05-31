@@ -331,6 +331,12 @@ CPC_DEFINE_PARSER(name) {            \
   return r;                          \
 }
 
+// Returns a value wrapped in the parser
+#define CPC_PURE(name, value_expr)                      \
+CPC_DEFINE_PARSER(name) {                               \
+  return cpc_res_ok((value_expr), input);               \
+}
+
 // parser that only matches if all the input has been consumed
 static inline CPC_DEFINE_PARSER(cpc_parser_eof){
   return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, "cpc_parser_eof: expected eof");

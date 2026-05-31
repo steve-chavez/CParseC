@@ -488,5 +488,25 @@ int main() {
     assert(strcmp(result.err, "bad bad") == 0);
   }
 
+  {
+
+    {
+      puts("The pure parser works...");
+
+      // This is the same as Haskell's `string "\"\"" >> return "\""`
+      CPC_STRING(p_ddquote, "\"\"")
+      CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
+      CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
+
+      CpcResult result = p_dquote(NULL, cpc_slice_from_cstr("\"\"abc"));
+
+      assert(result.ok);
+      assert(strncmp(result.out.as.slice.ptr, "\"", result.out.as.slice.len) == 0);
+      assert(result.rest.len != 0);
+      assert(strncmp(result.rest.ptr, "abc", result.rest.len) == 0);
+    }
+
+  }
+
   return EXIT_SUCCESS;
 }
