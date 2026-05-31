@@ -1,7 +1,7 @@
 #ifndef CPARSEC_H_INCLUDED
-
 #define CPARSEC_H_INCLUDED
 
+#include <stddef.h>
 #include <stdbool.h>
 
 // The basic element of the parser are string slices to allow for zero-copy parsing
