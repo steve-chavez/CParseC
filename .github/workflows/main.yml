@@ -17,4 +17,19 @@ jobs:
         run: nix-shell --run "make"
 
       - name: Run tests
-        run: nix-shell --run "./test/basic.sh"
+        run: nix-shell --run "./test/test.sh"
+
+  bench:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4.3.0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31.5.0
+
+      - name: Build
+        run: nix-shell --run "make bench"
+
+      - name: Run tests
+        run: nix-shell --run "./bench/bench.sh"

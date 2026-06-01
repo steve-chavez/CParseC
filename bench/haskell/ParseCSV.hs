@@ -2,7 +2,7 @@
 
 {-
  -This is taken from https://raw.githubusercontent.com/robinbb/attoparsec-csv/refs/heads/master/Text/ParseCSV.hs,
- -modified to obtain the input from stdin instead of a file
+ -modified to obtain the input from stdin instead of a file and print a report
  -}
 
 -- Copyright 2012 UserEvents, Inc.
