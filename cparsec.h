@@ -343,7 +343,3 @@ static inline CPC_DEFINE_PARSER(cpc_parser_eof){
 }
 
 #endif /* CPARSEC_H_INCLUDED */
-
-#ifdef CPARSEC_IMPLEMENTATION
-
-#endif /* CPARSEC_IMPLEMENTATION */

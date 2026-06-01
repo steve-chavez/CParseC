@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <string.h>
 
-#define CPARSEC_IMPLEMENTATION
 #include "cparsec.h"
 
 // parsers used across tests
