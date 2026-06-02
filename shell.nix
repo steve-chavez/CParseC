@@ -10,6 +10,7 @@ mkShellNoCC {
       clang-tools
       (haskellPackages.ghcWithPackages (p: [ p.attoparsec ]))
       p7zip
+      hyperfine
     ];
   shellHook = ''
     export HISTFILE=.history

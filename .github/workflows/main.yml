@@ -33,3 +33,7 @@ jobs:
 
       - name: Run bench
         run: nix-shell --run "./bench/bench.sh"
+
+      - name: Show report
+        run: |
+          cat build/report.md >> "$GITHUB_STEP_SUMMARY"
