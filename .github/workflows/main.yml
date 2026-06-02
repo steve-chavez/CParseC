@@ -36,4 +36,8 @@ jobs:
 
       - name: Show report
         run: |
-          cat build/report.md >> "$GITHUB_STEP_SUMMARY"
+          echo -e "## Haskell comparison \n" >> "$GITHUB_STEP_SUMMARY"
+          cat build/report-c-hs.md >> "$GITHUB_STEP_SUMMARY"
+
+          echo -e "\n\n## Rust comparison \n" >> "$GITHUB_STEP_SUMMARY"
+          cat build/report-c-rust.md >> "$GITHUB_STEP_SUMMARY"

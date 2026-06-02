@@ -11,6 +11,8 @@ mkShellNoCC {
       (haskellPackages.ghcWithPackages (p: [ p.attoparsec ]))
       p7zip
       hyperfine
+      rustc
+      cargo
     ];
   shellHook = ''
     export HISTFILE=.history

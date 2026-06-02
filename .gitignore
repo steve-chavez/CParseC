@@ -1,3 +1,4 @@
 tags
 .history
 bench/data/customers-1000000.csv
+bench/rust/target/
