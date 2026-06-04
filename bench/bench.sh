@@ -1,8 +1,7 @@
 set -euo pipefail
 
-echo -e "\n=== BENCH: Haskell, C and Rust demos give the same report \n"
-
-# This will output a failure showing the differences if there were any
+# Haskell, C and Rust should give the same report,
+# this will output a failure showing the differences if there were any.
 diff -u \
   <(./build/attoparsec_csv < bench/data/customers-100.csv) \
   <(./build/csv_demo.o < bench/data/customers-100.csv)
@@ -11,14 +10,23 @@ diff -u \
   <(./build/csv-rust-demo < bench/data/customers-100.csv) \
   <(./build/csv_demo.o < bench/data/customers-100.csv)
 
-echo -e "\n=== BENCH: Haskell, C and Rust demos report over 1M CSV rows \n"
+# Print the report in markdown
+echo -e "# Parsing 1M CSV rows"
+
+echo -e "\n## Haskell vs cparsec\n"
 
 hyperfine \
   './build/csv_demo.o < bench/data/customers-1000000.csv' \
   './build/attoparsec_csv < bench/data/customers-1000000.csv' \
-  --export-markdown build/report-c-hs.md
+  --export-markdown build/report-c-hs.md > /dev/null
+
+cat build/report-c-hs.md
+
+echo -e "\n## Rust vs cparsec\n"
 
 hyperfine \
   './build/csv_demo.o < bench/data/customers-1000000.csv' \
   './build/csv-rust-demo < bench/data/customers-1000000.csv' \
-  --export-markdown build/report-c-rust.md
+  --export-markdown build/report-c-rust.md > /dev/null
+
+cat build/report-c-rust.md
