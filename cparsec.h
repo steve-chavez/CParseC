@@ -134,7 +134,7 @@ CPC_DEFINE_PARSER(name) {                                                       
   const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                                                \
                                                                                                                                 \
   if (input.len < slice.len)                                                                                                    \
-    return cpc_res_err(input, #name ": too short");                                                                           \
+    return cpc_res_err(input, #name ": mismatch");                                                                           \
                                                                                                                                 \
   for (size_t i = 0; i < slice.len; ++i)                                                                                        \
     if (input.ptr[i] != slice.ptr[i])                                                                                           \
@@ -187,10 +187,10 @@ CPC_DEFINE_PARSER_ARENA(name) {                         \
   CpcValue out = cpc_val_list(A);                       \
                                                         \
   if (!cpc_val_list_push(A, &out, r1.out))              \
-    return cpc_res_err(r1.rest, #name ": arena surpassed"); \
+    return cpc_res_err(r1.rest, #name ": too many"); \
                                                         \
   if (!cpc_val_list_push(A, &out, r2.out))              \
-    return cpc_res_err(r1.rest, #name ": arena surpassed"); \
+    return cpc_res_err(r1.rest, #name ": too many"); \
                                                         \
   return cpc_res_ok(out, r2.rest);                      \
 }
@@ -236,11 +236,11 @@ CPC_DEFINE_PARSER(name) {                                                       
       break;                                                                      \
     }                                                                             \
     if (cpc_no_progress_made(r.rest, cur))                                        \
-      return cpc_res_err(input, #name ": must consume input");                  \
+      return cpc_res_err(input, #name ": no progress");                  \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
     if (!cpc_val_list_push(A, &out, r.out))                                       \
-      return cpc_res_err(input, #name ": arena surpassed");                     \
+      return cpc_res_err(input, #name ": too many");                     \
     cur = r.rest;                                                                 \
     count++;                                                                      \
   }                                                                               \
@@ -270,11 +270,11 @@ CPC_DEFINE_PARSER(name) {                                                       
       return ritem;                                                               \
                                                                                   \
     if (cpc_no_progress_made(ritem.rest, cur))                                    \
-      return cpc_res_err(input, #name ": must consume input");                  \
+      return cpc_res_err(input, #name ": no progress");                  \
     /* even if the above condition wasn't present, the loop will always finish */ \
     /* because the arena has a capacity */                                        \
     if (!cpc_val_list_push(A, &out, ritem.out))                                   \
-      return cpc_res_err(input, #name ": arena surpassed");                     \
+      return cpc_res_err(input, #name ": too many");                     \
                                                                                   \
     cur = ritem.rest;                                                             \
   }                                                                               \
@@ -290,7 +290,7 @@ CPC_DEFINE_PARSER(name) {                                                 \
   }                                                                       \
                                                                           \
   if (!cpc_val_list_push(A, &out, first.out))                             \
-    return cpc_res_err(input, #name ": arena surpassed");               \
+    return cpc_res_err(input, #name ": too many");               \
                                                                           \
   cur = first.rest;                                                       \
   /* this loop will always terminate, see below conditions */             \
@@ -306,11 +306,11 @@ CPC_DEFINE_PARSER(name) {                                                 \
     }                                                                     \
                                                                           \
     if (!cpc_val_list_push(A, &out, next.out))                            \
-      return cpc_res_err(input, #name ": arena surpassed");             \
+      return cpc_res_err(input, #name ": too many");             \
                                                                           \
     cur = next.rest;                                                      \
     if (cpc_no_progress_made(cur, before_sep))                            \
-      return cpc_res_err(input, #name ": must consume input");          \
+      return cpc_res_err(input, #name ": no progress");          \
   }                                                                       \
   return cpc_res_ok(out, cur);                                            \
 }

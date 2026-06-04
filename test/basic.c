@@ -53,7 +53,7 @@ int main() {
     assert(result.out.as.slice.len == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "a", result.rest.len) == 0);
-    assert(strcmp(result.err, "p_begin: too short") == 0);
+    assert(strcmp(result.err, "p_begin: mismatch") == 0);
   }
 
   {
@@ -230,7 +230,7 @@ int main() {
 
       CpcResult result = p_inf_many(NULL, cpc_slice_from_cstr("anything"));
 
-      assert(strcmp(result.err, "p_inf_many: must consume input") == 0);
+      assert(strcmp(result.err, "p_inf_many: no progress") == 0);
     }
 
     puts("The many parser will fail if the arena doesn't have enough capacity...");
@@ -239,7 +239,7 @@ int main() {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_a: arena surpassed") == 0);
+      assert(strcmp(result.err, "p_many_a: too many") == 0);
     }
   }
 
@@ -283,7 +283,7 @@ int main() {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_1_a: arena surpassed") == 0);
+      assert(strcmp(result.err, "p_many_1_a: too many") == 0);
     }
   }
 
@@ -327,7 +327,7 @@ int main() {
       CpcResult result = p_inf_many_till(&arena, cpc_slice_from_cstr("abc"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_inf_many_till: must consume input") == 0);
+      assert(strcmp(result.err, "p_inf_many_till: no progress") == 0);
     }
 
     {
@@ -336,7 +336,7 @@ int main() {
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_a_till_semicol: arena surpassed") == 0);
+      assert(strcmp(result.err, "p_many_a_till_semicol: too many") == 0);
     }
   }
 
@@ -381,7 +381,7 @@ int main() {
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A A A A A"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_A_sep_by_space: arena surpassed") == 0);
+      assert(strcmp(result.err, "p_A_sep_by_space: too many") == 0);
     }
 
     {
@@ -394,7 +394,7 @@ int main() {
       CpcResult result = p_inf_sep_by(&arena, cpc_slice_from_cstr("abc"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_inf_sep_by: must consume input") == 0);
+      assert(strcmp(result.err, "p_inf_sep_by: no progress") == 0);
     }
   }
 
@@ -450,7 +450,7 @@ int main() {
 
       CpcResult result = p_inf_sep_by_1(&arena, cpc_slice_from_cstr(","));
 
-      assert(strcmp(result.err, "p_inf_sep_by_1: must consume input") == 0);
+      assert(strcmp(result.err, "p_inf_sep_by_1: no progress") == 0);
     }
   }
 
