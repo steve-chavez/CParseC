@@ -185,9 +185,11 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
                                                                                                    \
     CpcValue out = cpc_val_list(A);                                                                \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r1.out)) return cpc_res_err(r1.rest, #name ": too many");      \
+    if (!cpc_val_list_push(A, &out, r1.out))                                                       \
+      return cpc_res_err(r1.rest, #name ": arena surpassed");                                      \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r2.out)) return cpc_res_err(r1.rest, #name ": too many");      \
+    if (!cpc_val_list_push(A, &out, r2.out))                                                       \
+      return cpc_res_err(r1.rest, #name ": arena surpassed");                                      \
                                                                                                    \
     return cpc_res_ok(out, r2.rest);                                                               \
   }
@@ -238,7 +240,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
       /* even if the above condition wasn't present, the loop will always                          \
        * finish */                                                                                 \
       /* because the arena has a capacity */                                                       \
-      if (!cpc_val_list_push(A, &out, r.out)) return cpc_res_err(input, #name ": too many");       \
+      if (!cpc_val_list_push(A, &out, r.out))                                                      \
+        return cpc_res_err(input, #name ": arena surpassed");                                      \
       cur = r.rest;                                                                                \
       count++;                                                                                     \
     }                                                                                              \
@@ -271,7 +274,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
       /* even if the above condition wasn't present, the loop will always                          \
        * finish */                                                                                 \
       /* because the arena has a capacity */                                                       \
-      if (!cpc_val_list_push(A, &out, ritem.out)) return cpc_res_err(input, #name ": too many");   \
+      if (!cpc_val_list_push(A, &out, ritem.out))                                                  \
+        return cpc_res_err(input, #name ": arena surpassed");                                      \
                                                                                                    \
       cur = ritem.rest;                                                                            \
     }                                                                                              \
@@ -286,7 +290,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
       return first_not_ok;                                                                         \
     }                                                                                              \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, first.out)) return cpc_res_err(input, #name ": too many");     \
+    if (!cpc_val_list_push(A, &out, first.out))                                                    \
+      return cpc_res_err(input, #name ": arena surpassed");                                        \
                                                                                                    \
     cur = first.rest;                                                                              \
     /* this loop will always terminate, see below conditions */                                    \
@@ -301,7 +306,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
         break;                                                                                     \
       }                                                                                            \
                                                                                                    \
-      if (!cpc_val_list_push(A, &out, next.out)) return cpc_res_err(input, #name ": too many");    \
+      if (!cpc_val_list_push(A, &out, next.out))                                                   \
+        return cpc_res_err(input, #name ": arena surpassed");                                      \
                                                                                                    \
       cur = next.rest;                                                                             \
       if (cpc_no_progress_made(cur, before_sep)) return cpc_res_err(input, #name ": no progress"); \

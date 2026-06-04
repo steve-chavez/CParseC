@@ -242,7 +242,7 @@ int main() {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_a: too many") == 0);
+      assert(strcmp(result.err, "p_many_a: arena surpassed") == 0);
     }
   }
 
@@ -287,7 +287,7 @@ int main() {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_1_a: too many") == 0);
+      assert(strcmp(result.err, "p_many_1_a: arena surpassed") == 0);
     }
   }
 
@@ -341,7 +341,7 @@ int main() {
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_many_a_till_semicol: too many") == 0);
+      assert(strcmp(result.err, "p_many_a_till_semicol: arena surpassed") == 0);
     }
   }
 
@@ -387,7 +387,7 @@ int main() {
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A A A A A"));
 
       assert(!result.ok);
-      assert(strcmp(result.err, "p_A_sep_by_space: too many") == 0);
+      assert(strcmp(result.err, "p_A_sep_by_space: arena surpassed") == 0);
     }
 
     {
