@@ -1,8 +1,8 @@
 #ifndef UTILS_H_INCLUDED
 #define UTILS_H_INCLUDED
 
-#include <stdbool.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -28,8 +28,8 @@ static inline bool read_alloc_entire_stdin(char **out_buf, size_t *out_len) {
         perror("realloc");
         goto error;
       }
-      buf = tmp;
-      cap = new_cap;
+      buf   = tmp;
+      cap   = new_cap;
       space = cap - len;
     }
 
@@ -49,15 +49,14 @@ static inline bool read_alloc_entire_stdin(char **out_buf, size_t *out_len) {
     perror("realloc");
     goto error;
   }
-  buf       = tmp;
-  buf[len]  = '\0'; // null terminator
-  *out_buf  = buf;
-  *out_len  = len;
+  buf      = tmp;
+  buf[len] = '\0'; // null terminator
+  *out_buf = buf;
+  *out_len = len;
   return true;
 
 error:
-  if(buf)
-    free(buf);
+  if (buf) free(buf);
   return false;
 }
 

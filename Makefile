@@ -4,6 +4,8 @@ BENCH_DATA_DIR=bench/data
 CFLAGS=-std=c11 -O3 -Wextra -Wall -Werror
 LDFLAGS=-I.
 
+SRC = cparsec.h bench/c/*.[ch] test/*.c test/linkage/*.[ch]
+
 test: $(BUILD_DIR)/basic.o  $(BUILD_DIR)/linkage.o
 
 bench: $(BUILD_DIR)/attoparsec_csv $(BUILD_DIR)/csv_demo.o $(BUILD_DIR)/csv-rust-demo $(BENCH_DATA_DIR)/customers-1000000.csv
@@ -32,3 +34,12 @@ $(BENCH_DATA_DIR)/customers-1000000.csv: $(BENCH_DATA_DIR)/customers-1000000.7z
 $(BUILD_DIR)/.gitignore:
 	mkdir -p $(BUILD_DIR)
 	echo "*" > $(BUILD_DIR)/.gitignore
+
+.PHONY: style
+style:
+	clang-format -i $(SRC)
+
+.PHONY: style-check
+style-check:
+	clang-format -i $(SRC)
+	git diff-index --exit-code HEAD -- '*.c' '*.h'

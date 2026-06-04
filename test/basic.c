@@ -1,6 +1,6 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 
 #include "cparsec.h"
@@ -13,11 +13,11 @@ CPC_STRING(p_semicol, ";")
 CPC_STRING(p_a, "A")
 CPC_STRING(p_b, "B")
 
-static inline bool is_a(char c){
+static inline bool is_a(char c) {
   return c == 'a';
 }
 
-static inline bool is_space(char c){
+static inline bool is_space(char c) {
   return c == ' ';
 }
 
@@ -106,10 +106,10 @@ int main() {
 
     puts("The apply + fmap parser works...");
 
-    CpcResult to_pair(CpcArena *A, const CpcValue *v, CpcSlice rest){
+    CpcResult to_pair(CpcArena * A, const CpcValue *v, CpcSlice rest) {
       Pair *pair = A->user;
-      pair->x = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
-      pair->y = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
+      pair->x    = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
+      pair->y    = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
 
       return cpc_res_ok(cpc_val_ptr(pair), rest);
     }
@@ -146,7 +146,9 @@ int main() {
     assert(result2.rest.len != 0);
     assert(strncmp(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
 
-    puts("The takewhile parser never fails, it returns empty string if the pred returns false at first char...");
+    puts("The takewhile parser never fails, it returns empty string if the "
+         "pred returns false at "
+         "first char...");
 
     CpcResult result1 = p_only_a(NULL, cpc_slice_from_cstr("bbbbbaaaa"));
 
@@ -203,7 +205,7 @@ int main() {
       assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
-      for(size_t i = 0; i < result.out.as.list.len; i++){
+      for (size_t i = 0; i < result.out.as.list.len; i++) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
@@ -233,7 +235,8 @@ int main() {
       assert(strcmp(result.err, "p_inf_many: no progress") == 0);
     }
 
-    puts("The many parser will fail if the arena doesn't have enough capacity...");
+    puts("The many parser will fail if the arena doesn't have enough "
+         "capacity...");
 
     {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
@@ -258,7 +261,7 @@ int main() {
       assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 3);
-      for(size_t i = 0; i < result.out.as.list.len; i++){
+      for (size_t i = 0; i < result.out.as.list.len; i++) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
@@ -277,7 +280,8 @@ int main() {
       assert(strcmp(result.err, "p_many_1_a: too few") == 0);
     }
 
-    puts("The many1 parser will fail if the arena doesn't have enough capacity...");
+    puts("The many1 parser will fail if the arena doesn't have enough "
+         "capacity...");
 
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
@@ -302,7 +306,7 @@ int main() {
       assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 9);
-      for(size_t i = 0; i < result.out.as.list.len; i++){
+      for (size_t i = 0; i < result.out.as.list.len; i++) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
@@ -331,7 +335,8 @@ int main() {
     }
 
     {
-      puts("The manytill parser will fail if the arena doesn't have enough capacity...");
+      puts("The manytill parser will fail if the arena doesn't have enough "
+           "capacity...");
 
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
@@ -355,7 +360,7 @@ int main() {
       assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
-      for(size_t i = 0; i < result.out.as.list.len; i++){
+      for (size_t i = 0; i < result.out.as.list.len; i++) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
@@ -376,7 +381,8 @@ int main() {
     }
 
     {
-      puts("The sepby parser will fail if the arena doesn't have enough capacity...");
+      puts("The sepby parser will fail if the arena doesn't have enough "
+           "capacity...");
 
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A A A A A"));
 
@@ -413,7 +419,7 @@ int main() {
       assert(result.ok);
       assert(cpc_is_list(&result.out));
       assert(result.out.as.list.len == 4);
-      for(size_t i = 0; i < result.out.as.list.len; i++){
+      for (size_t i = 0; i < result.out.as.list.len; i++) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         assert(strncmp(slice_.ptr, "A", slice_.len) == 0);
       }
@@ -435,12 +441,12 @@ int main() {
     {
       puts("The sepby1 parser will always finish...");
 
-      bool is_comma(char c){
+      bool is_comma(char c) {
         return c == ',';
       }
       CPC_TAKE_WHILE(p_take_while_comma, is_comma)
 
-      bool is_not_comma(char c){
+      bool is_not_comma(char c) {
         return c != ',';
       }
 
@@ -504,7 +510,6 @@ int main() {
       assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "abc", result.rest.len) == 0);
     }
-
   }
 
   return EXIT_SUCCESS;

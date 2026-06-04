@@ -1,11 +1,12 @@
-// This program parses a CSV from stdin, and prints a report (this matches the report on bench/haskell/ParseCSV.hs)
+// This program parses a CSV from stdin, and prints a report
+// (matches the report on bench/haskell/ParseCSV.hs)
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
-#include "utils.h"
-#include "csv.h"
 #include "cparsec.h"
+#include "csv.h"
+#include "utils.h"
 
 static void write_slice(FILE *out, CpcSlice s) {
   for (size_t i = 0; i < s.len; ++i)
@@ -27,9 +28,8 @@ static void print_headers(const CpcArena *A, const CpcValue *header_row, size_t 
   }
 }
 
-static void print_row(const CpcArena *row_arena, const CpcValue *row,
-                      const CpcArena *header_arena, const CpcValue *header_row,
-                      size_t header_count, size_t row_index) {
+static void print_row(const CpcArena *row_arena, const CpcValue *row, const CpcArena *header_arena,
+                      const CpcValue *header_row, size_t header_count, size_t row_index) {
 
   printf("Row %zu\n", row_index + 1);
   for (size_t i = 0; i < header_count; ++i) {
@@ -51,8 +51,7 @@ int main(void) {
   char  *buffer = NULL;
   size_t len    = 0;
 
-  if (!read_alloc_entire_stdin(&buffer, &len))
-    return EXIT_FAILURE;
+  if (!read_alloc_entire_stdin(&buffer, &len)) return EXIT_FAILURE;
 
   enum { MAX_SIZE = 8192 };
   // use two arenas for header and rows to prevent forgetting to reset the arena
@@ -61,9 +60,11 @@ int main(void) {
   CpcArena header_arena;
   CpcArena row_arena;
 
-  cpc_arena_init(&header_arena, header_arena_storage, sizeof(header_arena_storage) / sizeof(header_arena_storage[0]), NULL);
-  cpc_arena_init(&row_arena, row_arena_storage, sizeof(row_arena_storage) / sizeof(row_arena_storage[0]), NULL);
-  CpcSlice  input = (CpcSlice){.ptr = buffer, .len = len};
+  cpc_arena_init(&header_arena, header_arena_storage,
+                 sizeof(header_arena_storage) / sizeof(header_arena_storage[0]), NULL);
+  cpc_arena_init(&row_arena, row_arena_storage,
+                 sizeof(row_arena_storage) / sizeof(row_arena_storage[0]), NULL);
+  CpcSlice input = (CpcSlice){.ptr = buffer, .len = len};
 
   CpcResult header_res = parse_csv_row(&header_arena, input);
   if (!header_res.ok || !cpc_is_list(&header_res.out)) {

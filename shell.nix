@@ -13,6 +13,7 @@ mkShellNoCC {
       hyperfine
       rustc
       cargo
+      clang-tools
     ];
   shellHook = ''
     export HISTFILE=.history

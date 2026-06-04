@@ -1,4 +1,5 @@
-// This tries to imitate bench/haskell/ParseCSV.hs, but the parser is row-based instead of file-based as it's simpler to allocate memory this way.
+// This tries to imitate bench/haskell/ParseCSV.hs, but the parser is row-based
+// instead of file-based as it's simpler to allocate memory this way.
 #include "csv.h"
 
 CPC_STRING(p_lf, "\n")
@@ -29,12 +30,12 @@ CPC_ALT(p_inside_quotes, p_til_dquote, p_to_singlequote)
 CPC_LABEL(insideQuotesPrime, p_inside_quotes, "paired double quotes")
 
 // TODO Find a better way to do equivalent of `T.concat <$> many insideQuotes`
-CPC_DEFINE_PARSER_ARENA(insideQuotes_){
-  char        *out = (char *)input.ptr;
-  size_t       dst = 0;
+CPC_DEFINE_PARSER_ARENA(insideQuotes_) {
+  char    *out = (char *)input.ptr;
+  size_t   dst = 0;
   CpcSlice cur = input;
 
-  // TODO we duplicate some of the functionality of CPC_MANY(insideQuotesPrime) here
+  // TODO we duplicate some of the functionality of CPC_MANY(insideQuotesPrime)
   for (;;) {
     const CpcResult piece = insideQuotesPrime(A, cur);
     if (!piece.ok) {
@@ -42,15 +43,18 @@ CPC_DEFINE_PARSER_ARENA(insideQuotes_){
     }
     if (!cpc_is_slice(&piece.out))
       return cpc_res_err(cur, "insideQuotes_: not a slice"); // TODO should not happen
+
     // This is the equivalent of `T.concat`
     for (size_t i = 0; i < piece.out.as.slice.len; ++i)
       out[dst++] = piece.out.as.slice.ptr[i];
+
     cur = piece.rest;
   }
 
   return cpc_res_ok(cpc_val_slice((CpcSlice){.ptr = out, .len = dst}), cur);
 }
-CPC_LABEL(insideQuotes, insideQuotes_, "inside of double quotes") // TODO verify if this can happen
+CPC_LABEL(insideQuotes, insideQuotes_,
+          "inside of double quotes") // TODO verify if this can happen
 
 // equivalent of `char '"' *> insideQuotes <* char '"'`
 CPC_STRING(p_dquote, "\"")
