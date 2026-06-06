@@ -350,7 +350,7 @@ int main() {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_SEP_BY(p_A_sep_by_space, p_is_space, p_a)
+    CPC_SEP_BY(p_A_sep_by_space, p_a, p_is_space)
 
     {
       puts("The sepby parser succeeds...");
@@ -409,7 +409,7 @@ int main() {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_SEP_BY_1(p_A_sep_by_1_space, p_is_space, p_a)
+    CPC_SEP_BY_1(p_A_sep_by_1_space, p_a, p_is_space)
 
     {
       puts("The sepby1 parser succeeds...");
@@ -452,7 +452,7 @@ int main() {
 
       CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma)
 
-      CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_not_comma, p_take_while_comma)
+      CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_comma, p_take_while_not_comma)
 
       CpcResult result = p_inf_sep_by_1(&arena, cpc_slice_from_cstr(","));
 

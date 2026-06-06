@@ -275,7 +275,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     }                                                                                              \
   }
 
-#define ___CPC_SEP_BY(name, sep, item, first_not_ok)                                               \
+#define ___CPC_SEP_BY(name, item, sep, first_not_ok)                                               \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcValue  out   = cpc_val_list(A);                                                             \
     CpcSlice  cur   = input;                                                                       \
@@ -309,10 +309,10 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok(out, cur);                                                                   \
   }
 
-#define CPC_SEP_BY(name, sep, item) ___CPC_SEP_BY(name, sep, item, cpc_res_ok(out, input))
+#define CPC_SEP_BY(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_ok(out, input))
 
-#define CPC_SEP_BY_1(name, sep, item)                                                              \
-  ___CPC_SEP_BY(name, sep, item, cpc_res_err(input, #name ": too few"))
+#define CPC_SEP_BY_1(name, item, sep)                                                              \
+  ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, #name ": too few"))
 
 // Behave as `parser`, but whenever the `parser` fails without consuming any
 // input, it replaces the builtin error message with `msg`.

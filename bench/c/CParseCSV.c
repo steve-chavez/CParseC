@@ -66,7 +66,7 @@ CPC_ALT(field_, quotedField, unquotedField)
 CPC_LABEL(field, field_, "field")
 
 CPC_STRING(p_comma, ",")
-CPC_SEP_BY_1(record_, p_comma, field)
+CPC_SEP_BY_1(record_, field, p_comma)
 CPC_LABEL(record, record_, "record")
 
 CPC_LEFT(parse_csv_row, record, lineEnd)
