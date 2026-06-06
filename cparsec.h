@@ -222,7 +222,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // Consume input as long as the predicate returns true, and return the consumed
 // input. This parser does not fail. If the predicate returns false at first
 // char, it returns an empty string as the slice.
-#define CPC_TAKE_WHILE(name, pred) ___CPC_TAKE_WHILE(name, pred, (void)0)
+#define CPC_TAKE_WHILE_0(name, pred) ___CPC_TAKE_WHILE(name, pred, (void)0)
 
 #define ___CPC_MANY(name, parser, min_count)                                                       \
   CPC_DEFINE_PARSER(name) {                                                                        \
@@ -248,14 +248,14 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // Parses zero or more occurrences of the given parser.
 // Unlike the Haskell version this will always terminate, even when paired with
 // takewhile.
-#define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0)
+#define CPC_MANY_0(name, parser) ___CPC_MANY(name, parser, 0)
 
 // Parses one or more occurrences of the given parser.
 #define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1)
 
 // Parses zero or more occurrences of parser `item`, until parser `end`
 // succeeds. Returns a list of values returned by p.
-#define CPC_MANY_TILL(name, item, end)                                                             \
+#define CPC_MANY_TILL_0(name, item, end)                                                           \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcValue out = cpc_val_list(A);                                                                \
     CpcSlice cur = input;                                                                          \
@@ -309,8 +309,10 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok(out, cur);                                                                   \
   }
 
-#define CPC_SEP_BY(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_ok(out, input))
+// Parses zero or more occurrences of `item`, separated by `sep`. Returns a list of values returned by p.
+#define CPC_SEP_BY_0(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_ok(out, input))
 
+// Parses one or more occurrences of `item`, separated by `sep`. Returns a list of values returned by p.
 #define CPC_SEP_BY_1(name, item, sep)                                                              \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, #name ": too few"))
 

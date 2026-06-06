@@ -1,4 +1,4 @@
-# cparsec (WIP)
+# CParseC
 
 Features:
 
@@ -27,14 +27,17 @@ Basic combinators:
 - `CPC_FMAP` (`<$>`).
 - `CPC_PURE`.
 
+The non-failing combinators are suffixed with `_0`:
+
+- `CPC_MANY_0`
+- `CPC_SEP_BY_0`
+- `CPC_TAKE_WHILE_0`
+- `CPC_MANY_TILL_0`
+
 Others:
 
-- `CPC_TAKE_WHILE`
 - `CPC_TAKE_WHILE_1`
-- `CPC_MANY`
 - `CPC_MANY_1`
-- `CPC_MANY_TILL`
-- `CPC_SEP_BY`
 - `CPC_SEP_BY_1`
 - `CPC_LABEL`
 - `cpc_parser_eof`: end of input

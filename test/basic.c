@@ -21,7 +21,7 @@ static inline bool is_space(char c) {
   return c == ' ';
 }
 
-CPC_TAKE_WHILE(p_is_space, is_space)
+CPC_TAKE_WHILE_0(p_is_space, is_space)
 
 int main() {
   {
@@ -128,7 +128,7 @@ int main() {
   {
     puts("The takewhile parser succeeds...");
 
-    CPC_TAKE_WHILE(p_only_a, is_a)
+    CPC_TAKE_WHILE_0(p_only_a, is_a)
 
     CpcResult result = p_only_a(NULL, cpc_slice_from_cstr("aaaaaaaaaabbbbb"));
 
@@ -197,7 +197,7 @@ int main() {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_MANY(p_many_a, p_a)
+    CPC_MANY_0(p_many_a, p_a)
 
     {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAb"));
@@ -228,7 +228,7 @@ int main() {
     puts("The many parser will always finish...");
 
     {
-      CPC_MANY(p_inf_many, p_is_space);
+      CPC_MANY_0(p_inf_many, p_is_space);
 
       CpcResult result = p_inf_many(NULL, cpc_slice_from_cstr("anything"));
 
@@ -296,7 +296,7 @@ int main() {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_MANY_TILL(p_many_a_till_semicol, p_a, p_semicol)
+    CPC_MANY_TILL_0(p_many_a_till_semicol, p_a, p_semicol)
 
     {
       puts("The manytill parser succeeds...");
@@ -326,7 +326,7 @@ int main() {
     {
       puts("The manytill parser will always finish...");
 
-      CPC_MANY_TILL(p_inf_many_till, p_is_space, p_b)
+      CPC_MANY_TILL_0(p_inf_many_till, p_is_space, p_b)
 
       CpcResult result = p_inf_many_till(&arena, cpc_slice_from_cstr("abc"));
 
@@ -350,7 +350,7 @@ int main() {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_SEP_BY(p_A_sep_by_space, p_a, p_is_space)
+    CPC_SEP_BY_0(p_A_sep_by_space, p_a, p_is_space)
 
     {
       puts("The sepby parser succeeds...");
@@ -393,7 +393,7 @@ int main() {
     {
       puts("The sepby parser will always finish...");
 
-      CPC_SEP_BY(p_inf_sep_by, p_is_space, p_is_space)
+      CPC_SEP_BY_0(p_inf_sep_by, p_is_space, p_is_space)
 
       cpc_arena_reset(&arena);
 
@@ -444,13 +444,13 @@ int main() {
       bool is_comma(char c) {
         return c == ',';
       }
-      CPC_TAKE_WHILE(p_take_while_comma, is_comma)
+      CPC_TAKE_WHILE_0(p_take_while_comma, is_comma)
 
       bool is_not_comma(char c) {
         return c != ',';
       }
 
-      CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma)
+      CPC_TAKE_WHILE_0(p_take_while_not_comma, is_not_comma)
 
       CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_comma, p_take_while_not_comma)
 
