@@ -309,10 +309,12 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok(out, cur);                                                                   \
   }
 
-// Parses zero or more occurrences of `item`, separated by `sep`. Returns a list of values returned by p.
+// Parses zero or more occurrences of `item`, separated by `sep`.
+// Returns a list of values returned by `item`.
 #define CPC_SEP_BY_0(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_ok(out, input))
 
-// Parses one or more occurrences of `item`, separated by `sep`. Returns a list of values returned by p.
+// Parses one or more occurrences of `item`, separated by `sep`.
+// Returns a list of values returned by `item`.
 #define CPC_SEP_BY_1(name, item, sep)                                                              \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, #name ": too few"))
 
