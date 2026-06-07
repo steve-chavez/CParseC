@@ -194,8 +194,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok(out, r2.rest);                                                               \
   }
 
-// `fmap` is the equivalent of Haskell's `<$>`
-#define CPC_FMAP(name, x, fn)                                                                      \
+// `map` is the equivalent of Haskell's `<$>`
+#define CPC_MAP(name, x, fn)                                                                       \
   CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
     CpcResult r = x(A, input);                                                                     \
     return (fn)(A, &r.out, r.rest);                                                                \

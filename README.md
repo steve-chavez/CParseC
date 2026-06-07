@@ -26,7 +26,7 @@ Features:
 - `CPC_MANY_1`
 - `CPC_SEP_BY_1`
 - `CPC_LABEL`
-- `CPC_FMAP` (`<$>`): always succeeds
+- `CPC_MAP` (`<$>`): always succeeds
 - `CPC_PURE`: always succeeds
 - `CPC_MANY`: always succeeds
 - `CPC_SEP_BY`: always succeeds

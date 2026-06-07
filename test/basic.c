@@ -104,7 +104,7 @@ int main() {
     Pair pair = {0};
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &pair);
 
-    puts("The apply + fmap parser works...");
+    puts("The apply + map parser works...");
 
     CpcResult to_pair(CpcArena * A, const CpcValue *v, CpcSlice rest) {
       Pair *pair = A->user;
@@ -115,7 +115,7 @@ int main() {
     }
 
     CPC_APPLY(p_ab, p_a, p_b);
-    CPC_FMAP(p_mapped_ab, p_ab, to_pair);
+    CPC_MAP(p_mapped_ab, p_ab, to_pair);
 
     CpcResult result = p_mapped_ab(&arena, cpc_slice_from_cstr("AB"));
 
