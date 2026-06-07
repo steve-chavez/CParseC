@@ -48,3 +48,7 @@ The leaf parsers that can fail have a `_LABEL` variant that can be used to chang
 - `CPC_EOF_LABEL`
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
+
+### Compressed combinators
+
+- `CPC_BETWEEN`

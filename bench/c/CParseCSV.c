@@ -53,8 +53,7 @@ CPC_DEFINE_PARSER_ARENA(insideQuotes) {
 
 // equivalent of `char '"' *> insideQuotes <* char '"'`
 CPC_STRING(p_dquote, "\"")
-CPC_RIGHT(p_open, p_dquote, insideQuotes)
-CPC_LEFT(quotedField, p_open, p_dquote)
+CPC_BETWEEN(quotedField, p_dquote, insideQuotes, p_dquote)
 
 CPC_ALT(field, quotedField, unquotedField)
 

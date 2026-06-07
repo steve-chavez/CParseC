@@ -337,6 +337,18 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
   }
 
+// Parses open, followed by inner and finally close. Only the value of inner is returned.
+#define CPC_BETWEEN(name, open, inner, close)                                                      \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    CpcResult ro = (open)(A, input);                                                               \
+    if (!ro.ok) return ro;                                                                         \
+    CpcResult ri = (inner)(A, ro.rest);                                                            \
+    if (!ri.ok) return ri;                                                                         \
+    CpcResult rc = (close)(A, ri.rest);                                                            \
+    if (!rc.ok) return rc;                                                                         \
+    return cpc_res_ok(ri.out, rc.rest);                                                            \
+  }
+
 // parser that only matches if all the input has been consumed
 static inline ___CPC_EOF(cpc_parser_eof, "cpc_parser_eof: expected eof")
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)

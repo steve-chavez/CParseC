@@ -108,6 +108,22 @@ int main() {
   }
 
   {
+    puts("The between parser works...");
+
+    CPC_STRING(p_lparen, "(")
+    CPC_STRING(p_rparen, ")")
+    CPC_STRING(p_abc, "abc")
+    CPC_BETWEEN(p_paren_abc, p_lparen, p_abc, p_rparen)
+
+    CpcResult result = p_paren_abc(NULL, cpc_slice_from_cstr("(abc)rest"));
+
+    assert(result.ok);
+    assert(strncmp(result.out.as.slice.ptr, "abc", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
+  }
+
+  {
     CpcValue arena_storage[2] = {0};
     CpcArena arena;
     typedef struct {

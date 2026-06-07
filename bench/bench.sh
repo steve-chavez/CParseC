@@ -1,5 +1,7 @@
 set -euo pipefail
 
+make bench
+
 # Haskell, C and Rust should give the same report,
 # this will output a failure showing the differences if there were any.
 diff -u \
