@@ -18,26 +18,18 @@ Features:
 
 ## Features
 
-Basic combinators:
-
 - `CPC_ALT` (`<|>`)
 - `CPC_RIGHT` (`*>`)
 - `CPC_LEFT` (`<*`)
 - `CPC_APPLY` (`<*>`)
-- `CPC_FMAP` (`<$>`).
-- `CPC_PURE`.
-
-The non-failing combinators are suffixed with `_0`:
-
-- `CPC_MANY_0`
-- `CPC_SEP_BY_0`
-- `CPC_TAKE_WHILE_0`
-- `CPC_MANY_TILL_0`
-
-Others:
-
 - `CPC_TAKE_WHILE_1`
 - `CPC_MANY_1`
 - `CPC_SEP_BY_1`
 - `CPC_LABEL`
+- `CPC_FMAP` (`<$>`): always succeeds
+- `CPC_PURE`: always succeeds
+- `CPC_MANY`: always succeeds
+- `CPC_SEP_BY`: always succeeds
+- `CPC_TAKE_WHILE`: always succeeds
+- `CPC_MANY_TILL`: always succeeds
 - `cpc_parser_eof`: end of input

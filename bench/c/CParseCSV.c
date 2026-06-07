@@ -14,7 +14,7 @@ static inline bool is_unquoted_field(char c) {
   return c != ',' && c != '\n' && c != '\r' && c != '"';
 }
 
-CPC_TAKE_WHILE_0(p_unquoted_field, is_unquoted_field)
+CPC_TAKE_WHILE(p_unquoted_field, is_unquoted_field)
 CPC_LABEL(unquotedField, p_unquoted_field, "unquoted field")
 
 static inline bool is_dquote(char c) {
@@ -35,7 +35,7 @@ CPC_DEFINE_PARSER_ARENA(insideQuotes_) {
   size_t   dst = 0;
   CpcSlice cur = input;
 
-  // TODO we duplicate some of the functionality of CPC_MANY_0(insideQuotesPrime)
+  // TODO we duplicate some of the functionality of CPC_MANY(insideQuotesPrime)
   for (;;) {
     const CpcResult piece = insideQuotesPrime(A, cur);
     if (!piece.ok) {
