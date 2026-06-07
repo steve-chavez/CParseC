@@ -128,18 +128,21 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with
 // `alt`
-#define CPC_STRING(name, lit)                                                                      \
+#define ___CPC_STRING(name, lit, err)                                                              \
   CPC_DEFINE_PARSER(name) {                                                                        \
     const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                 \
                                                                                                    \
-    if (input.len < slice.len) return cpc_res_err(input, #name ": mismatch");                      \
+    if (input.len < slice.len) return cpc_res_err(input, (err));                                   \
                                                                                                    \
     for (size_t i = 0; i < slice.len; ++i)                                                         \
-      if (input.ptr[i] != slice.ptr[i]) return cpc_res_err(input, #name ": mismatch");             \
+      if (input.ptr[i] != slice.ptr[i]) return cpc_res_err(input, (err));                          \
                                                                                                    \
     return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)),                           \
                       cpc_slice_sub(input, slice.len, input.len - slice.len));                     \
   }
+
+#define CPC_STRING(name, lit) ___CPC_STRING(name, lit, #name ": mismatch")
+#define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)                                                                        \
@@ -218,13 +221,15 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // input left.
 #define CPC_TAKE_WHILE_1(name, pred)                                                               \
   ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, #name ": too few"))
+#define CPC_TAKE_WHILE_1_LABEL(name, pred, label)                                                  \
+  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, (label)))
 
 // Consume input as long as the predicate returns true, and return the consumed
 // input. This parser does not fail. If the predicate returns false at first
 // char, it returns an empty string as the slice.
 #define CPC_TAKE_WHILE(name, pred) ___CPC_TAKE_WHILE(name, pred, (void)0)
 
-#define ___CPC_MANY(name, parser, min_count)                                                       \
+#define ___CPC_MANY(name, parser, min_count, err_too_few)                                          \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcValue out   = cpc_val_list(A);                                                              \
     CpcSlice cur   = input;                                                                        \
@@ -242,16 +247,17 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
       cur = r.rest;                                                                                \
       count++;                                                                                     \
     }                                                                                              \
-    return count < min ? cpc_res_err(input, #name ": too few") : cpc_res_ok(out, cur);             \
+    return count < min ? cpc_res_err(input, (err_too_few)) : cpc_res_ok(out, cur);                 \
   }
 
 // Parses zero or more occurrences of the given parser.
 // Unlike the Haskell version this will always terminate, even when paired with
 // takewhile.
-#define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0)
+#define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0, #name ": too few")
 
 // Parses one or more occurrences of the given parser.
-#define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1)
+#define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1, #name ": too few")
+#define CPC_MANY_1_LABEL(name, parser, label) ___CPC_MANY(name, parser, 1, label)
 
 // Parses zero or more occurrences of parser `item`, until parser `end`
 // succeeds. Returns a list of values returned by p.
@@ -317,18 +323,8 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // Returns a list of values returned by `item`.
 #define CPC_SEP_BY_1(name, item, sep)                                                              \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, #name ": too few"))
-
-// Behave as `parser`, but whenever the `parser` fails without consuming any
-// input, it replaces the builtin error message with `msg`.
-#define CPC_LABEL(name, parser, msg)                                                               \
-  CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult r = (parser)(A, input);                                                              \
-    if (r.ok)                                                                                      \
-      return r;                                                                                    \
-    else                                                                                           \
-      r.err = (msg);                                                                               \
-    return r;                                                                                      \
-  }
+#define CPC_SEP_BY_1_LABEL(name, item, sep, label)                                                 \
+  ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, (label)))
 
 // Returns a value wrapped in the parser
 #define CPC_PURE(name, value_expr)                                                                 \
@@ -336,10 +332,13 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok((value_expr), input);                                                        \
   }
 
+#define ___CPC_EOF(name, err)                                                                      \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
+  }
+
 // parser that only matches if all the input has been consumed
-static inline CPC_DEFINE_PARSER(cpc_parser_eof) {
-  return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input)
-                        : cpc_res_err(input, "cpc_parser_eof: expected eof");
-}
+static inline ___CPC_EOF(cpc_parser_eof, "cpc_parser_eof: expected eof")
+#define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
 #endif /* CPARSEC_H_INCLUDED */

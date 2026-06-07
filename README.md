@@ -15,9 +15,13 @@ Features:
   CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
   CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
   ```
+- Only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
 
 ## Features
 
+Basic combinators:
+
+- `CPC_STRING`
 - `CPC_ALT` (`<|>`)
 - `CPC_RIGHT` (`*>`)
 - `CPC_LEFT` (`<*`)
@@ -25,11 +29,22 @@ Features:
 - `CPC_TAKE_WHILE_1`
 - `CPC_MANY_1`
 - `CPC_SEP_BY_1`
-- `CPC_LABEL`
-- `CPC_MAP` (`<$>`): always succeeds
 - `CPC_PURE`: always succeeds
+- `CPC_MAP` (`<$>`): always succeeds
 - `CPC_MANY`: always succeeds
 - `CPC_SEP_BY`: always succeeds
 - `CPC_TAKE_WHILE`: always succeeds
 - `CPC_MANY_TILL`: always succeeds
 - `cpc_parser_eof`: end of input
+
+### Labels
+
+The leaf parsers that can fail have a `_LABEL` variant that can be used to change the builtin error message.
+
+- `CPC_STRING_LABEL`
+- `CPC_TAKE_WHILE_1_LABEL`
+- `CPC_MANY_1_LABEL`
+- `CPC_SEP_BY_1_LABEL`
+- `CPC_EOF_LABEL`
+
+The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.

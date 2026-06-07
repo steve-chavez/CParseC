@@ -57,6 +57,19 @@ int main() {
   }
 
   {
+    puts("The string parser can be labeled...");
+
+    CPC_STRING_LABEL(p_begin_l, "BEGIN", "this is wrong")
+
+    CpcResult result = p_begin_l(NULL, cpc_slice_from_cstr("a"));
+    assert(!result.ok);
+    assert(result.out.as.slice.len == 0);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "a", result.rest.len) == 0);
+    assert(strcmp(result.err, "this is wrong") == 0);
+  }
+
+  {
     puts("The alternative parser works...");
 
     CPC_STRING(p_end, "END")
@@ -188,6 +201,15 @@ int main() {
     assert(strcmp(result3.err, "p_at_least_1_a: too few") == 0);
     assert(strncmp(result3.out.as.slice.ptr, "", result3.out.as.slice.len) == 0);
     assert(result3.rest.len == 0);
+
+    puts("The takewhile1 parser can be labeled...");
+
+    CPC_TAKE_WHILE_1_LABEL(p_at_least_1_a_l, is_a, "expected at least one a")
+
+    CpcResult result4 = p_at_least_1_a_l(NULL, cpc_slice_from_cstr("bba"));
+
+    assert(!result4.ok);
+    assert(strcmp(result4.err, "expected at least one a") == 0);
   }
 
   {
@@ -256,6 +278,7 @@ int main() {
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
     CPC_MANY_1(p_many_1_a, p_a)
+    CPC_MANY_1_LABEL(p_many_1_a_l, p_a, "expected one or more As")
 
     {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAb"));
@@ -290,6 +313,15 @@ int main() {
 
       assert(!result.ok);
       assert(strcmp(result.err, "p_many_1_a: arena surpassed") == 0);
+    }
+
+    {
+      puts("The many1 parser can be labeled...");
+
+      CpcResult result = p_many_1_a_l(&arena, cpc_slice_from_cstr("bAAAAb"));
+
+      assert(!result.ok);
+      assert(strcmp(result.err, "expected one or more As") == 0);
     }
   }
 
@@ -412,6 +444,7 @@ int main() {
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
     CPC_SEP_BY_1(p_A_sep_by_1_space, p_a, p_is_space)
+    CPC_SEP_BY_1_LABEL(p_A_sep_by_1_space_l, p_a, p_is_space, "expected one or more items")
 
     {
       puts("The sepby1 parser succeeds...");
@@ -460,6 +493,15 @@ int main() {
 
       assert(strcmp(result.err, "p_inf_sep_by_1: no progress") == 0);
     }
+
+    {
+      puts("The sepby1 parser can be labeled...");
+
+      CpcResult result = p_A_sep_by_1_space_l(&arena, cpc_slice_from_cstr("B A A"));
+
+      assert(!result.ok);
+      assert(strcmp(result.err, "expected one or more items") == 0);
+    }
   }
 
   {
@@ -483,16 +525,14 @@ int main() {
   }
 
   {
-    puts("The label parser works...");
+    puts("The eof parser can be labeled...");
 
-    CPC_LABEL(p_begin_label, p_begin, "bad bad")
+    CPC_EOF_LABEL(p_eof_l, "missing eof")
 
-    CpcResult result = p_begin_label(NULL, cpc_slice_from_cstr("BEGAN"));
+    CpcResult result = p_eof_l(NULL, cpc_slice_from_cstr("A"));
 
     assert(!result.ok);
-    assert(result.rest.len != 0);
-    assert(strncmp(result.rest.ptr, "BEGAN", result.rest.len) == 0);
-    assert(strcmp(result.err, "bad bad") == 0);
+    assert(strcmp(result.err, "missing eof") == 0);
   }
 
   {
