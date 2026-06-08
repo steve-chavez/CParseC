@@ -365,4 +365,25 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 static inline ___CPC_EOF(CPC_EOF_, "CPC_EOF_: expected eof")
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
+#define ___CPC_END_OF_LINE(name, err)                                                              \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    if (input.len == 0) return cpc_res_err(input, (err));                                          \
+    const char *p = input.ptr;                                                                     \
+    if (p[0] == '\r') {                                                                            \
+      if (input.len >= 2 && p[1] == '\n')                                                          \
+        return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 2)),                               \
+                          cpc_slice_sub(input, 2, input.len - 2));                                 \
+      return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                                 \
+                        cpc_slice_sub(input, 1, input.len - 1));                                   \
+    }                                                                                              \
+    if (p[0] == '\n')                                                                              \
+      return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                                 \
+                        cpc_slice_sub(input, 1, input.len - 1));                                   \
+    return cpc_res_err(input, (err));                                                              \
+  }
+
+    // Parses a CRLF (see crlf) or LF (see newline) end-of-line
+    static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "CPC_LINE_ENDING: expected newline")
+#define CPC_END_OF_LINE_LABEL(name, label) ___CPC_END_OF_LINE(name, label)
+
 #endif /* CPARSEC_H_INCLUDED */

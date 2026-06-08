@@ -521,6 +521,52 @@ int main() {
   }
 
   {
+    puts("The end of line parser succeeds on CRLF...");
+
+    CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\r\nrest"));
+
+    assert(result.ok);
+    assert(strncmp(result.out.as.slice.ptr, "\r\n", result.out.as.slice.len) == 0);
+    assert(result.out.as.slice.len == 2);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
+  }
+
+  {
+    puts("The end of line parser succeeds on LF...");
+
+    CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\nrest"));
+
+    assert(result.ok);
+    assert(strncmp(result.out.as.slice.ptr, "\n", result.out.as.slice.len) == 0);
+    assert(result.out.as.slice.len == 1);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
+  }
+
+  {
+    puts("The end of line parser fails on non-newline input...");
+
+    CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("A"));
+
+    assert(!result.ok);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "A", result.rest.len) == 0);
+    assert(strcmp(result.err, "CPC_LINE_ENDING: expected newline") == 0);
+  }
+
+  {
+    puts("The end of line parser can be labeled...");
+
+    CPC_END_OF_LINE_LABEL(p_eol_l, "bad line ending")
+
+    CpcResult result = p_eol_l(NULL, cpc_slice_from_cstr("A"));
+
+    assert(!result.ok);
+    assert(strcmp(result.err, "bad line ending") == 0);
+  }
+
+  {
     puts("The eof parser succeeds...");
 
     CpcResult result = CPC_EOF_(NULL, cpc_slice_from_cstr(""));
