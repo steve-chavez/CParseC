@@ -35,7 +35,7 @@ Basic combinators:
 - `CPC_SEP_BY`: always succeeds
 - `CPC_TAKE_WHILE`: always succeeds
 - `CPC_MANY_TILL`: always succeeds
-- `cpc_parser_eof`: end of input
+- `CPC_EOF_`: end of input
 - `CPC_MATCH`
 
 ### Labels

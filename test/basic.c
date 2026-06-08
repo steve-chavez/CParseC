@@ -523,7 +523,7 @@ int main() {
   {
     puts("The eof parser succeeds...");
 
-    CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr(""));
+    CpcResult result = CPC_EOF_(NULL, cpc_slice_from_cstr(""));
 
     assert(result.ok);
     assert(result.rest.len == 0);
@@ -532,12 +532,12 @@ int main() {
   {
     puts("The eof parser fails...");
 
-    CpcResult result = cpc_parser_eof(NULL, cpc_slice_from_cstr("A"));
+    CpcResult result = CPC_EOF_(NULL, cpc_slice_from_cstr("A"));
 
     assert(!result.ok);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "A", result.rest.len) == 0);
-    assert(strcmp(result.err, "cpc_parser_eof: expected eof") == 0);
+    assert(strcmp(result.err, "CPC_EOF_: expected eof") == 0);
   }
 
   {

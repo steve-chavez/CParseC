@@ -7,7 +7,7 @@ CPC_STRING(p_crlf, "\r\n")
 CPC_STRING(p_cr, "\r")
 CPC_ALT(p_newline_, p_lf, p_cr)
 CPC_ALT(p_newline, p_crlf, p_newline_)
-CPC_ALT(lineEnd, p_newline, cpc_parser_eof)
+CPC_ALT(lineEnd, p_newline, CPC_EOF_)
 
 static inline bool is_unquoted_field(char c) {
   return c != ',' && c != '\n' && c != '\r' && c != '"';

@@ -331,12 +331,6 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
   CPC_DEFINE_PARSER(name) {                                                                        \
     return cpc_res_ok((value_expr), input);                                                        \
   }
-
-#define ___CPC_EOF(name, err)                                                                      \
-  CPC_DEFINE_PARSER(name) {                                                                        \
-    return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
-  }
-
 // Parses open, followed by inner and finally close. Only the value of inner is returned.
 #define CPC_BETWEEN(name, open, inner, close)                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \
@@ -362,8 +356,13 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
                 : r;                                                                               \
   }
 
+#define ___CPC_EOF(name, err)                                                                      \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
+  }
+
 // parser that only matches if all the input has been consumed
-static inline ___CPC_EOF(cpc_parser_eof, "cpc_parser_eof: expected eof")
+static inline ___CPC_EOF(CPC_EOF_, "CPC_EOF_: expected eof")
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
 #endif /* CPARSEC_H_INCLUDED */
