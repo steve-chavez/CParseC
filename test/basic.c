@@ -570,5 +570,51 @@ int main() {
     }
   }
 
+  {
+    puts("The match parser works...");
+
+    CPC_STRING(p_token, "token")
+    CPC_LEFT(p_token_semicol, p_token, p_semicol)
+    CPC_MATCH(p_match_token_semicol, p_token_semicol)
+
+    CpcResult plain = p_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
+
+    assert(plain.ok);
+    assert(strncmp(plain.out.as.slice.ptr, "token", plain.out.as.slice.len) == 0);
+    assert(plain.rest.len != 0);
+    assert(strncmp(plain.rest.ptr, "rest", plain.rest.len) == 0);
+
+    CpcResult result = p_match_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
+
+    assert(result.ok);
+    assert(strncmp(result.out.as.slice.ptr, "token;", result.out.as.slice.len) == 0);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
+  }
+
+  {
+    puts("The match parser restores arena state...");
+
+    CpcValue arena_storage[2] = {0};
+    CpcArena arena;
+    cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
+
+    CPC_APPLY(p_ab_for_match, p_a, p_b)
+    CPC_MATCH(p_match_ab, p_ab_for_match)
+
+    CpcResult result1 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
+
+    assert(result1.ok);
+    assert(strncmp(result1.out.as.slice.ptr, "AB", result1.out.as.slice.len) == 0);
+    assert(strncmp(result1.rest.ptr, "rest", result1.rest.len) == 0);
+    assert(arena.offset == 0);
+
+    CpcResult result2 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
+
+    assert(result2.ok);
+    assert(strncmp(result2.out.as.slice.ptr, "AB", result2.out.as.slice.len) == 0);
+    assert(arena.offset == 0);
+  }
+
   return EXIT_SUCCESS;
 }

@@ -349,6 +349,19 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return cpc_res_ok(ri.out, rc.rest);                                                            \
   }
 
+// Run `parser` and tell what substring was matched, like attoparsec `match`
+#define CPC_MATCH(name, parser)                                                                    \
+  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+    /* mark is for restoring the arena state */                                                    \
+    size_t    mark = A->offset;                                                                    \
+    CpcResult r    = (parser)(A, input);                                                           \
+    A->offset      = mark;                                                                         \
+    return r.ok ? cpc_res_ok(                                                                      \
+                      cpc_val_slice(cpc_slice_sub(input, 0, (size_t)(r.rest.ptr - input.ptr))),    \
+                      r.rest)                                                                      \
+                : r;                                                                               \
+  }
+
 // parser that only matches if all the input has been consumed
 static inline ___CPC_EOF(cpc_parser_eof, "cpc_parser_eof: expected eof")
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
