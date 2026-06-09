@@ -27,7 +27,7 @@ CPC_RIGHT(p_to_singlequote, p_ddquote, pure_dquote)
 CPC_ALT(insideQuotesPrime, p_til_dquote, p_to_singlequote)
 
 // TODO Find a better way to do equivalent of `T.concat <$> many insideQuotes`
-CPC_DEFINE_PARSER_ARENA(insideQuotes) {
+CPC_DEFINE_PARSER(insideQuotes) {
   char    *out = (char *)input.ptr;
   size_t   dst = 0;
   CpcSlice cur = input;

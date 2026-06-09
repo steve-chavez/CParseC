@@ -121,9 +121,9 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
   return (cur.ptr == prev.ptr && cur.len == prev.len);
 }
 
+// Note that GCC unused really means "may be unused", some parsers do use the
+// arena (and no error is thrown) and others don't use it.
 #define CPC_DEFINE_PARSER(name) CpcResult name(__attribute__((unused)) CpcArena *A, CpcSlice input)
-
-#define CPC_DEFINE_PARSER_ARENA(name) CpcResult name(CpcArena *A, CpcSlice input)
 
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with
@@ -160,7 +160,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)                                                                        \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult res = (x)(A, input);                                                                 \
     if (res.ok)                                                                                    \
       return res;                                                                                  \
@@ -170,7 +170,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`
 #define CPC_RIGHT(name, x, y)                                                                      \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult res = (x)(A, input);                                                                 \
     if (!res.ok)                                                                                   \
       return res;                                                                                  \
@@ -180,7 +180,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 
 // `left` is the equivalent of Haskell's Applicative left sequencing `<*`
 #define CPC_LEFT(name, x, y)                                                                       \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult res1 = (x)(A, input);                                                                \
     if (!res1.ok) return res1;                                                                     \
                                                                                                    \
@@ -194,7 +194,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // `<*> It produces a list of 2 elements, but this can be mapped to another
 // struct
 #define CPC_APPLY(name, x, y)                                                                      \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult r1 = (x)(A, input);                                                                  \
     if (!r1.ok) return r1;                                                                         \
     CpcResult r2 = (y)(A, r1.rest);                                                                \
@@ -213,7 +213,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 
 // `map` is the equivalent of Haskell's `<$>`
 #define CPC_MAP(name, x, fn)                                                                       \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult r = x(A, input);                                                                     \
     return (fn)(A, &r.out, r.rest);                                                                \
   }
@@ -359,7 +359,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 
 // Run `parser` and tell what substring was matched, like attoparsec `match`
 #define CPC_MATCH(name, parser)                                                                    \
-  CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
     /* mark is for restoring the arena state */                                                    \
     size_t    mark = A->offset;                                                                    \
     CpcResult r    = (parser)(A, input);                                                           \
