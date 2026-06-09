@@ -70,6 +70,31 @@ int main() {
   }
 
   {
+    puts("The one_of parser works...");
+
+    CPC_ONE_OF(p_vowel, "aeiou")
+    CPC_ONE_OF_LABEL(p_vowel_l, "aeiou", "expected vowel")
+
+    CpcResult result = p_vowel(NULL, cpc_slice_from_cstr("apple"));
+
+    assert(result.ok);
+    assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
+    assert(result.out.as.slice.len == 1);
+    assert(result.rest.len != 0);
+    assert(strncmp(result.rest.ptr, "pple", result.rest.len) == 0);
+
+    CpcResult result2 = p_vowel(NULL, cpc_slice_from_cstr("banana"));
+
+    assert(!result2.ok);
+    assert(strcmp(result2.err, "p_vowel: none matched") == 0);
+
+    CpcResult result3 = p_vowel_l(NULL, cpc_slice_from_cstr("banana"));
+
+    assert(!result3.ok);
+    assert(strcmp(result3.err, "expected vowel") == 0);
+  }
+
+  {
     puts("The alternative parser works...");
 
     CPC_STRING(p_end, "END")

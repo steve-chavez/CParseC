@@ -38,6 +38,7 @@ Basic combinators:
 - `CPC_MATCH`
 - `CPC_EOF_`: end of input
 - `CPC_END_OF_LINE_`: newline
+- `CPC_ONE_OF`
 
 ### Labels
 

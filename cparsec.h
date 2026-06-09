@@ -144,6 +144,20 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 #define CPC_STRING(name, lit) ___CPC_STRING(name, lit, #name ": mismatch")
 #define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
 
+#define ___CPC_ONE_OF(name, chars, err)                                                            \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    if (input.len == 0) return cpc_res_err(input, (err));                                          \
+    for (size_t i = 0; (chars)[i] != '\0'; i++)                                                    \
+      if (input.ptr[0] == (chars)[i])                                                              \
+        return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                               \
+                          cpc_slice_sub(input, 1, input.len - 1));                                 \
+    return cpc_res_err(input, (err));                                                              \
+  }
+
+// Succeeds if the character is in the supplied string. Returns the parsed character.
+#define CPC_ONE_OF(name, chars) ___CPC_ONE_OF(name, chars, #name ": none matched")
+#define CPC_ONE_OF_LABEL(name, chars, label) ___CPC_ONE_OF(name, chars, label)
+
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)                                                                        \
   CPC_DEFINE_PARSER_ARENA(name) {                                                                  \
