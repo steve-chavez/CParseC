@@ -4,13 +4,13 @@ BENCH_DATA_DIR=bench/data
 CFLAGS=-std=c11 -O3 -Wextra -Wall -Werror
 LDFLAGS=-I.
 
-SRC = cparsec.h bench/c/*.[ch] test/*.c test/linkage/*.[ch]
+SRC = cparsec.h bench/c/*.[ch] test/*.[ch] test/linkage/*.[ch]
 
 test: $(BUILD_DIR)/basic.o  $(BUILD_DIR)/linkage.o
 
 bench: $(BUILD_DIR)/attoparsec_csv $(BUILD_DIR)/csv_demo.o $(BUILD_DIR)/csv-rust-demo $(BENCH_DATA_DIR)/customers-1000000.csv
 
-$(BUILD_DIR)/basic.o: test/basic.c cparsec.h $(BUILD_DIR)/.gitignore
+$(BUILD_DIR)/basic.o: test/basic.c test/basic.h cparsec.h $(BUILD_DIR)/.gitignore
 	cc $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/attoparsec_csv: bench/haskell/ParseCSV.hs $(BUILD_DIR)/.gitignore
