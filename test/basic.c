@@ -29,6 +29,7 @@ int main() {
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("BEGIN leftovers"));
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "BEGIN", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
@@ -78,6 +79,7 @@ int main() {
     CpcResult result = p_vowel(NULL, cpc_slice_from_cstr("apple"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
     assert(result.out.as.slice.len == 1);
     assert(result.rest.len != 0);
@@ -102,6 +104,7 @@ int main() {
 
     CpcResult result = p_combined(NULL, cpc_slice_from_cstr("END leftovers"));
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "END", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, " leftovers", result.rest.len) == 0);
@@ -116,6 +119,7 @@ int main() {
 
     CpcResult result = p_valnum(NULL, cpc_slice_from_cstr("value=12345"));
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "12345", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
@@ -128,6 +132,7 @@ int main() {
 
     CpcResult result = p_stmt(NULL, cpc_slice_from_cstr("select 1;"));
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "select 1", result.out.as.slice.len) == 0);
     assert(result.rest.len == 0);
   }
@@ -143,6 +148,7 @@ int main() {
     CpcResult result = p_paren_abc(NULL, cpc_slice_from_cstr("(abc)rest"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "abc", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
@@ -187,6 +193,7 @@ int main() {
     CpcResult result = p_only_a(NULL, cpc_slice_from_cstr("aaaaaaaaaabbbbb"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "aaaaaaaaaa", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bbbbb", result.rest.len) == 0);
@@ -196,6 +203,7 @@ int main() {
     CpcResult result2 = p_only_a(NULL, cpc_slice_from_cstr("aabbbbbaaaa"));
 
     assert(result2.ok);
+    assert(cpc_is_slice(&result2.out));
     assert(strncmp(result2.out.as.slice.ptr, "aa", result2.out.as.slice.len) == 0);
     assert(result2.rest.len != 0);
     assert(strncmp(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
@@ -207,6 +215,7 @@ int main() {
     CpcResult result1 = p_only_a(NULL, cpc_slice_from_cstr("bbbbbaaaa"));
 
     assert(result1.ok);
+    assert(cpc_is_slice(&result1.out));
     assert(strncmp(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
     assert(result1.rest.len != 0);
     assert(strncmp(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
@@ -220,6 +229,7 @@ int main() {
     CpcResult result = p_at_least_1_a(NULL, cpc_slice_from_cstr("abb"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "bb", result.rest.len) == 0);
@@ -551,6 +561,7 @@ int main() {
     CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\r\nrest"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "\r\n", result.out.as.slice.len) == 0);
     assert(result.out.as.slice.len == 2);
     assert(result.rest.len != 0);
@@ -563,6 +574,7 @@ int main() {
     CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\nrest"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "\n", result.out.as.slice.len) == 0);
     assert(result.out.as.slice.len == 1);
     assert(result.rest.len != 0);
@@ -635,6 +647,7 @@ int main() {
       CpcResult result = p_dquote(NULL, cpc_slice_from_cstr("\"\"abc"));
 
       assert(result.ok);
+      assert(cpc_is_slice(&result.out));
       assert(strncmp(result.out.as.slice.ptr, "\"", result.out.as.slice.len) == 0);
       assert(result.rest.len != 0);
       assert(strncmp(result.rest.ptr, "abc", result.rest.len) == 0);
@@ -651,6 +664,7 @@ int main() {
     CpcResult plain = p_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
 
     assert(plain.ok);
+    assert(cpc_is_slice(&plain.out));
     assert(strncmp(plain.out.as.slice.ptr, "token", plain.out.as.slice.len) == 0);
     assert(plain.rest.len != 0);
     assert(strncmp(plain.rest.ptr, "rest", plain.rest.len) == 0);
@@ -658,6 +672,7 @@ int main() {
     CpcResult result = p_match_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
 
     assert(result.ok);
+    assert(cpc_is_slice(&result.out));
     assert(strncmp(result.out.as.slice.ptr, "token;", result.out.as.slice.len) == 0);
     assert(result.rest.len != 0);
     assert(strncmp(result.rest.ptr, "rest", result.rest.len) == 0);
@@ -676,6 +691,7 @@ int main() {
     CpcResult result1 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
 
     assert(result1.ok);
+    assert(cpc_is_slice(&result1.out));
     assert(strncmp(result1.out.as.slice.ptr, "AB", result1.out.as.slice.len) == 0);
     assert(strncmp(result1.rest.ptr, "rest", result1.rest.len) == 0);
     assert(arena.offset == 0);
@@ -683,6 +699,7 @@ int main() {
     CpcResult result2 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
 
     assert(result2.ok);
+    assert(cpc_is_slice(&result2.out));
     assert(strncmp(result2.out.as.slice.ptr, "AB", result2.out.as.slice.len) == 0);
     assert(arena.offset == 0);
   }
