@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef CPC_USE_MEMCHR
+#  include <string.h>
+#endif
+
 // The basic element of the parser are string slices to enable zero-copy parsing
 typedef struct {
   const char *ptr;
@@ -392,6 +396,21 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
     return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)),                                   \
                       cpc_slice_sub(input, i, input.len - i));                                     \
   }
+
+#ifdef CPC_USE_MEMCHR
+// combination of CPC_TAKE_TILL + CPC_ONE_OF that is SIMD-friendly thanks
+// to memchr
+#  define CPC_TAKE_TILL_ONE_OF(name, stops)                                                        \
+    CPC_DEFINE_PARSER(name) {                                                                      \
+      size_t end = input.len;                                                                      \
+      for (const char *s = (stops); *s; ++s) {                                                     \
+        const char *p = memchr(input.ptr, *s, end);                                                \
+        if (p) end = (size_t)(p - input.ptr);                                                      \
+      }                                                                                            \
+      return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, end)),                               \
+                        cpc_slice_sub(input, end, input.len - end));                               \
+    }
+#endif
 
 #define ___CPC_EOF(name, err)                                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \

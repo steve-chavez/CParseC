@@ -5,6 +5,7 @@ Features:
 - Zero-copy parsing
 - No hidden allocations, the user must supply an arena
 - Macro-based, no function pointers in hot paths
+- SIMD specialized combinators
 
 ## Differences with Haskell
 
@@ -58,3 +59,4 @@ The internal error messages that show the conditions of `arena surpassed` and `n
 ### Specialized combinators
 
 - `CPC_BETWEEN`
+- `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses `memchr` so it's SIMD-friendly.

@@ -1,4 +1,5 @@
 // This is a "freestanding" test, to ensure cparsec.h doesn't depend on the libc
+// or any other dependencies by default
 
 // adapted from https://stackoverflow.com/a/12137265/4692662
 static int test_strcmp(const char *s1, const char *s2) {
