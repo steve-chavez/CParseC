@@ -39,6 +39,7 @@ Basic combinators:
 - `CPC_EOF_`: end of input
 - `CPC_END_OF_LINE_`: newline
 - `CPC_ONE_OF`
+- `CPC_ANY`: any character of input
 
 ### Labels
 
@@ -49,6 +50,7 @@ The leaf parsers that can fail have a `_LABEL` variant that can be used to chang
 - `CPC_MANY_1_LABEL`
 - `CPC_SEP_BY_1_LABEL`
 - `CPC_EOF_LABEL`
+- `CPC_ANY_LABEL`
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
 

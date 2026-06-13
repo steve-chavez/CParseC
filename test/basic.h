@@ -704,6 +704,40 @@ int cpc_basic_test_run(void) {
     ASSERT(arena.offset == 0);
   }
 
+  {
+    PUTS("The any parser succeeds...");
+
+    CpcResult result = CPC_ANY_(NULL, cpc_slice_from_cstr("Arest"));
+
+    ASSERT(result.ok);
+    ASSERT(cpc_is_slice(&result.out));
+    ASSERT(STRNCMP(result.out.as.slice.ptr, "A", result.out.as.slice.len) == 0);
+    ASSERT(result.rest.len != 0);
+    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+  }
+
+  {
+    PUTS("The any parser fails on eof...");
+
+    CpcResult result = CPC_ANY_(NULL, cpc_slice_from_cstr(""));
+
+    ASSERT(!result.ok);
+    ASSERT(result.rest.len == 0);
+    ASSERT(STRCMP(result.err, "CPC_ANY_: eof") == 0);
+  }
+
+  {
+    PUTS("The any parser can be labeled...");
+
+    CPC_ANY_LABEL(p_any_l, "expected any char")
+
+    CpcResult result = p_any_l(NULL, cpc_slice_from_cstr(""));
+
+    ASSERT(!result.ok);
+    ASSERT(result.rest.len == 0);
+    ASSERT(STRCMP(result.err, "expected any char") == 0);
+  }
+
   return 0;
 }
 

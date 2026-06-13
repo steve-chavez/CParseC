@@ -144,6 +144,17 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 #define CPC_STRING(name, lit) ___CPC_STRING(name, lit, #name ": mismatch")
 #define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
 
+#define ___CPC_ANY(name, err)                                                                      \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    if (input.len == 0) return cpc_res_err(input, (err));                                          \
+    return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                                   \
+                      cpc_slice_sub(input, 1, input.len - 1));                                     \
+  }
+
+// Succeeds if there is at least one character of input. Returns the parsed character.
+static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
+#define CPC_ANY_LABEL(name, label) ___CPC_ANY(name, label)
+
 #define ___CPC_ONE_OF(name, chars, err)                                                            \
   CPC_DEFINE_PARSER(name) {                                                                        \
     if (input.len == 0) return cpc_res_err(input, (err));                                          \
@@ -375,8 +386,9 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
     return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
   }
 
-// parser that only matches if all the input has been consumed
-static inline ___CPC_EOF(CPC_EOF_, "CPC_EOF_: expected eof")
+    // parser that only matches if all the input has been consumed
+    static inline ___CPC_EOF(CPC_EOF_, "CPC_EOF_: expected eof")
+
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
 #define ___CPC_END_OF_LINE(name, err)                                                              \
