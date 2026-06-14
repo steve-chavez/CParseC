@@ -3,12 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ASSERT(expr) assert(expr)
-#define PUTS(msg) puts(msg)
-#define STRCMP(lhs, rhs) strcmp((lhs), (rhs))
-#define STRNCMP(lhs, rhs, n) strncmp((lhs), (rhs), (n))
-
 #include "cparsec.h"
+
+#include "utils.h"
 
 #include "basic.h"
 
