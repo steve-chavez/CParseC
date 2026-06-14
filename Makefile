@@ -26,7 +26,7 @@ $(BUILD_DIR)/freestanding.o: test/freestanding.c test/basic.h cparsec.h $(BUILD_
 	cc $(CFLAGS) $(LDFLAGS) -ffreestanding -c $< -o $@
 
 $(BUILD_DIR)/csv_demo.o: bench/c/csv_demo.c bench/c/CParseCSV.c bench/c/csv.h bench/c/utils.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) bench/c/csv_demo.c bench/c/CParseCSV.c -o $@
+	cc $(CFLAGS) $(LDFLAGS) -DCPC_USE_MEMCHR=1 bench/c/csv_demo.c bench/c/CParseCSV.c -o $@
 
 $(BUILD_DIR)/csv-rust-demo: bench/rust/Cargo.toml bench/rust/Cargo.lock bench/rust/src/main.rs
 	cargo build --release --manifest-path bench/rust/Cargo.toml

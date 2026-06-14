@@ -9,11 +9,14 @@ CPC_ALT(p_newline_, p_lf, p_cr)
 CPC_ALT(p_newline, p_crlf, p_newline_)
 CPC_ALT(lineEnd, p_newline, CPC_EOF_)
 
+#ifdef CPC_USE_MEMCHR
+CPC_TAKE_TILL_ONE_OF(unquotedField, ",\n\r\"")
+#else
 static inline bool is_unquoted_field(char c) {
   return c != ',' && c != '\n' && c != '\r' && c != '"';
 }
-
 CPC_TAKE_WHILE(unquotedField, is_unquoted_field)
+#endif
 
 static inline bool is_dquote(char c) {
   return c != '"';
