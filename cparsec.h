@@ -381,6 +381,18 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
                 : r;                                                                               \
   }
 
+// Consume input as long as the predicate returns false, and return the consumed input.
+// This parser does not fail. If the predicate returns false at first
+// char, it returns an empty string as the slice.
+#define CPC_TAKE_TILL(name, pred)                                                                  \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    size_t i = 0;                                                                                  \
+    while (i < input.len && !(pred)(input.ptr[i]))                                                 \
+      i++;                                                                                         \
+    return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, i)),                                   \
+                      cpc_slice_sub(input, i, input.len - i));                                     \
+  }
+
 #define ___CPC_EOF(name, err)                                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \
     return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \

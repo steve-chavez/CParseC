@@ -432,6 +432,41 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("The taketill parser succeeds...");
+
+    CPC_TAKE_TILL(p_till_b, is_a)
+
+    CpcResult result = p_till_b(NULL, cpc_slice_from_cstr("bbbbaaaa"));
+
+    ASSERT(result.ok);
+    ASSERT(cpc_is_slice(&result.out));
+    ASSERT(STRNCMP(result.out.as.slice.ptr, "bbbb", result.out.as.slice.len) == 0);
+    ASSERT(result.out.as.slice.len == 4);
+    ASSERT(result.rest.len != 0);
+    ASSERT(STRNCMP(result.rest.ptr, "aaaa", result.rest.len) == 0);
+
+    PUTS("The taketill parser returns empty when the predicate matches at the first char...");
+
+    CpcResult result2 = p_till_b(NULL, cpc_slice_from_cstr("aaaa"));
+
+    ASSERT(result2.ok);
+    ASSERT(cpc_is_slice(&result2.out));
+    ASSERT(result2.out.as.slice.len == 0);
+    ASSERT(result2.rest.len != 0);
+    ASSERT(STRNCMP(result2.rest.ptr, "aaaa", result2.rest.len) == 0);
+
+    PUTS("The taketill parser consumes the whole input when it hits eof...");
+
+    CpcResult result3 = p_till_b(NULL, cpc_slice_from_cstr("bbbb"));
+
+    ASSERT(result3.ok);
+    ASSERT(cpc_is_slice(&result3.out));
+    ASSERT(STRNCMP(result3.out.as.slice.ptr, "bbbb", result3.out.as.slice.len) == 0);
+    ASSERT(result3.out.as.slice.len == 4);
+    ASSERT(result3.rest.len == 0);
+  }
+
+  {
     CpcValue arena_storage[6] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
