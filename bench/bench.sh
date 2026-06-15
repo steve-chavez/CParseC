@@ -17,7 +17,7 @@ echo -e "# Parsing 1M CSV rows"
 
 echo -e "\n## Haskell vs CParseC\n"
 
-hyperfine \
+hyperfine --warmup 3 \
   './build/csv_demo.o < bench/data/customers-1000000.csv' \
   './build/attoparsec_csv < bench/data/customers-1000000.csv' \
   --export-markdown build/report-c-hs.md 1>&2
@@ -26,7 +26,7 @@ cat build/report-c-hs.md
 
 echo -e "\n## Rust vs CParseC\n"
 
-hyperfine \
+hyperfine --warmup 3 \
   './build/csv_simd_demo.o < bench/data/customers-1000000.csv' \
   './build/csv-rust-demo < bench/data/customers-1000000.csv' \
   --export-markdown build/report-c-rust.md 1>&2
