@@ -91,6 +91,8 @@ The internal error messages that show the conditions of `arena surpassed` and `n
 
 ## Differences with Haskell
 
+- Do or do not, there is no `try`. Unlike Haskell's Parsec we don't need a `try` since it's cheap to backtrack due to working with slices.
+  Parsers like `CPC_STRING` do not consume input if they fail.
 - C requires declaring the functions, so there's some naming overhead compared to Haskell.
 - CParseC parsers always terminate (many, manyTill, sepby, sepby1 can infinite loop in Haskell)
 - There's no equivalent for `>>` as this can be already expressed with `*>`, which is `CPC_RIGHT`. To express something like `string "\"\"" >> return "\""`, you can do:
