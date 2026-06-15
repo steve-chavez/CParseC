@@ -226,7 +226,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
     return cpc_res_ok(out, r2.rest);                                                               \
   }
 
-// `map` is the equivalent of Haskell's `<$>`
+// `map` is the equivalent of Haskell's `<$>`. Does not fail.
 #define CPC_MAP(name, x, fn)                                                                       \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult r = x(A, input);                                                                     \
@@ -255,7 +255,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 
 // Consume input as long as the predicate returns true, and return the consumed
 // input. This parser does not fail. If the predicate returns false at first
-// char, it returns an empty string as the slice.
+// char, it returns an empty string as the slice. Does not fail.
 #define CPC_TAKE_WHILE(name, pred) ___CPC_TAKE_WHILE(name, pred, (void)0)
 
 #define ___CPC_MANY(name, parser, min_count, err_too_few)                                          \
@@ -281,7 +281,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 
 // Parses zero or more occurrences of the given parser.
 // Unlike the Haskell version this will always terminate, even when paired with
-// takewhile.
+// takewhile. Does not fail.
 #define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0, #name ": too few")
 
 // Parses one or more occurrences of the given parser.
@@ -289,7 +289,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 #define CPC_MANY_1_LABEL(name, parser, label) ___CPC_MANY(name, parser, 1, label)
 
 // Parses zero or more occurrences of parser `item`, until parser `end`
-// succeeds. Returns a list of values returned by p.
+// succeeds. Returns a list of values returned by p. Does not fail.
 #define CPC_MANY_TILL(name, item, end)                                                             \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcValue out = cpc_val_list(A);                                                                \
@@ -345,7 +345,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
   }
 
 // Parses zero or more occurrences of `item`, separated by `sep`.
-// Returns a list of values returned by `item`.
+// Returns a list of values returned by `item`. Does not fail.
 #define CPC_SEP_BY(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_ok(out, input))
 
 // Parses one or more occurrences of `item`, separated by `sep`.
@@ -355,7 +355,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 #define CPC_SEP_BY_1_LABEL(name, item, sep, label)                                                 \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, (label)))
 
-// Returns a value wrapped in the parser
+// Returns a value wrapped in the parser. Does not fail.
 #define CPC_PURE(name, value_expr)                                                                 \
   CPC_DEFINE_PARSER(name) {                                                                        \
     return cpc_res_ok((value_expr), input);                                                        \
