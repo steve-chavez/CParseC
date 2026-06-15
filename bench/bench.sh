@@ -27,7 +27,7 @@ cat build/report-c-hs.md
 echo -e "\n## Rust vs CParseC\n"
 
 hyperfine \
-  './build/csv_demo.o < bench/data/customers-1000000.csv' \
+  './build/csv_simd_demo.o < bench/data/customers-1000000.csv' \
   './build/csv-rust-demo < bench/data/customers-1000000.csv' \
   --export-markdown build/report-c-rust.md 1>&2
 
