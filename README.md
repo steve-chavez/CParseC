@@ -42,6 +42,7 @@ Basic combinators:
 - `CPC_END_OF_LINE_`: newline
 - `CPC_ANY_`: any character of input
 - `CPC_EOF_`: end of input
+- `CPC_BETWEEN`
 
 ### Labels
 
@@ -56,7 +57,7 @@ The leaf parsers that can fail have a `_LABEL` variant that can be used to chang
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
 
-### Specialized combinators
+### SIMD combinators
 
-- `CPC_BETWEEN`
 - `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses `memchr` so it's SIMD-friendly.
+- `CPC_TAKE_QUOTED_BY`: parses a quoted string, handling double quotes as escaped content. Returns a slice.
