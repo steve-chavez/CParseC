@@ -1,7 +1,7 @@
 BUILD_DIR=build
 BENCH_DATA_DIR=bench/data
 
-CFLAGS=-std=c11 -O3 -Wextra -Wall -Werror
+CFLAGS=-std=c99 -O3 -Wextra -Wall -Werror
 LDFLAGS=-I.
 
 SRC = cparsec.h bench/c/*.[ch] test/*.[ch] test/linkage/*.[ch]
