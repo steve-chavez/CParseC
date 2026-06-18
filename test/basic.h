@@ -24,22 +24,16 @@ int cpc_basic_test_run(void) {
     PUTS("The string parser succeeds...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("BEGIN leftovers"));
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "BEGIN", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, " leftovers", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "BEGIN");
+    ASSERT_REST_EQ(result, " leftovers");
   }
 
   {
     PUTS("The string parser fails if there's a mismatch...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("unknown leftovers"));
-    ASSERT(!result.ok);
-    ASSERT(!result.ok || cpc_is_slice(&result.out));
-    ASSERT(result.out.as.slice.len == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "unknown leftovers", result.rest.len) == 0);
+    ASSERT_OUT_NOTHING(result);
+    ASSERT_REST_EQ(result, "unknown leftovers");
     ASSERT(STRCMP(result.err, "p_begin: mismatch") == 0);
   }
 
@@ -47,11 +41,8 @@ int cpc_basic_test_run(void) {
     PUTS("The string parser fails if the input is too short...");
 
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("a"));
-    ASSERT(!result.ok);
-    ASSERT(!result.ok || cpc_is_slice(&result.out));
-    ASSERT(result.out.as.slice.len == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "a", result.rest.len) == 0);
+    ASSERT_OUT_NOTHING(result);
+    ASSERT_REST_EQ(result, "a");
     ASSERT(STRCMP(result.err, "p_begin: mismatch") == 0);
   }
 
@@ -61,11 +52,8 @@ int cpc_basic_test_run(void) {
     CPC_STRING_LABEL(p_begin_l, "BEGIN", "this is wrong")
 
     CpcResult result = p_begin_l(NULL, cpc_slice_from_cstr("a"));
-    ASSERT(!result.ok);
-    ASSERT(!result.ok || cpc_is_slice(&result.out));
-    ASSERT(result.out.as.slice.len == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "a", result.rest.len) == 0);
+    ASSERT_OUT_NOTHING(result);
+    ASSERT_REST_EQ(result, "a");
     ASSERT(STRCMP(result.err, "this is wrong") == 0);
   }
 
@@ -77,12 +65,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = p_vowel(NULL, cpc_slice_from_cstr("apple"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
-    ASSERT(result.out.as.slice.len == 1);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "pple", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "a");
+    ASSERT_REST_EQ(result, "pple");
 
     CpcResult result2 = p_vowel(NULL, cpc_slice_from_cstr("banana"));
 
@@ -102,11 +86,8 @@ int cpc_basic_test_run(void) {
     CPC_ALT(p_combined, p_begin, p_end)
 
     CpcResult result = p_combined(NULL, cpc_slice_from_cstr("END leftovers"));
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "END", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, " leftovers", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "END");
+    ASSERT_REST_EQ(result, " leftovers");
   }
 
   {
@@ -117,10 +98,8 @@ int cpc_basic_test_run(void) {
     CPC_RIGHT(p_valnum, p_val, p_num)
 
     CpcResult result = p_valnum(NULL, cpc_slice_from_cstr("value=12345"));
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "12345", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len == 0);
+    ASSERT_OUT_SLICE_EQ(result, "12345");
+    ASSERT_REST_EMPTY(result);
   }
 
   {
@@ -130,10 +109,8 @@ int cpc_basic_test_run(void) {
     CPC_LEFT(p_stmt, p_sel, p_semicol)
 
     CpcResult result = p_stmt(NULL, cpc_slice_from_cstr("select 1;"));
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "select 1", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len == 0);
+    ASSERT_OUT_SLICE_EQ(result, "select 1");
+    ASSERT_REST_EMPTY(result);
   }
 
   {
@@ -146,11 +123,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = p_paren_abc(NULL, cpc_slice_from_cstr("(abc)rest"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "abc", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "abc");
+    ASSERT_REST_EQ(result, "rest");
   }
 
   {
@@ -181,7 +155,7 @@ int cpc_basic_test_run(void) {
     ASSERT(result.ok);
     ASSERT(pair.x == 'A');
     ASSERT(pair.y == 'B');
-    ASSERT(result.rest.len == 0);
+    ASSERT_REST_EMPTY(result);
   }
 
   {
@@ -191,21 +165,15 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = p_only_a(NULL, cpc_slice_from_cstr("aaaaaaaaaabbbbb"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "aaaaaaaaaa", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "bbbbb", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "aaaaaaaaaa");
+    ASSERT_REST_EQ(result, "bbbbb");
 
     PUTS("The takewhile parser never fails...");
 
     CpcResult result2 = p_only_a(NULL, cpc_slice_from_cstr("aabbbbbaaaa"));
 
-    ASSERT(result2.ok);
-    ASSERT(cpc_is_slice(&result2.out));
-    ASSERT(STRNCMP(result2.out.as.slice.ptr, "aa", result2.out.as.slice.len) == 0);
-    ASSERT(result2.rest.len != 0);
-    ASSERT(STRNCMP(result2.rest.ptr, "bbbbbaaaa", result2.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result2, "aa");
+    ASSERT_REST_EQ(result2, "bbbbbaaaa");
 
     PUTS("The takewhile parser never fails, it returns empty string if the "
          "pred returns false at "
@@ -213,11 +181,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result1 = p_only_a(NULL, cpc_slice_from_cstr("bbbbbaaaa"));
 
-    ASSERT(result1.ok);
-    ASSERT(cpc_is_slice(&result1.out));
-    ASSERT(STRNCMP(result1.out.as.slice.ptr, "", result1.out.as.slice.len) == 0);
-    ASSERT(result1.rest.len != 0);
-    ASSERT(STRNCMP(result1.rest.ptr, "bbbbbaaaa", result1.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result1, "");
+    ASSERT_REST_EQ(result1, "bbbbbaaaa");
   }
 
   {
@@ -227,32 +192,24 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = p_at_least_1_a(NULL, cpc_slice_from_cstr("abb"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "a", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "bb", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "a");
+    ASSERT_REST_EQ(result, "bb");
 
     PUTS("The takewhile1 parser does fail...");
 
     CpcResult result2 = p_at_least_1_a(NULL, cpc_slice_from_cstr("bba"));
 
-    ASSERT(!result2.ok);
+    ASSERT_OUT_NOTHING(result2);
     ASSERT(STRCMP(result2.err, "p_at_least_1_a: too few") == 0);
-    ASSERT(!result2.ok || cpc_is_slice(&result2.out));
-    ASSERT(STRNCMP(result2.out.as.slice.ptr, "", result2.out.as.slice.len) == 0);
-    ASSERT(result2.rest.len != 0);
-    ASSERT(STRNCMP(result2.rest.ptr, "bba", result2.rest.len) == 0);
+    ASSERT_REST_EQ(result2, "bba");
 
     PUTS("The takewhile1 parser fails on empty input...");
 
     CpcResult result3 = p_at_least_1_a(NULL, cpc_slice_from_cstr(""));
 
-    ASSERT(!result3.ok);
+    ASSERT_OUT_NOTHING(result3);
     ASSERT(STRCMP(result3.err, "p_at_least_1_a: too few") == 0);
-    ASSERT(!result3.ok || cpc_is_slice(&result3.out));
-    ASSERT(STRNCMP(result3.out.as.slice.ptr, "", result3.out.as.slice.len) == 0);
-    ASSERT(result3.rest.len == 0);
+    ASSERT_REST_EMPTY(result3);
 
     PUTS("The takewhile1 parser can be labeled...");
 
@@ -283,8 +240,7 @@ int cpc_basic_test_run(void) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         ASSERT(STRNCMP(slice_.ptr, "A", slice_.len) == 0);
       }
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "b", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "b");
     }
 
     PUTS("The many parser doesn't fail if it doesn't consume any input...");
@@ -295,8 +251,7 @@ int cpc_basic_test_run(void) {
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
       ASSERT(result.out.as.list.len == 0);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "aaaab", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "aaaab");
     }
 
     PUTS("The many parser will always finish...");
@@ -342,8 +297,7 @@ int cpc_basic_test_run(void) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         ASSERT(STRNCMP(slice_.ptr, "A", slice_.len) == 0);
       }
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "b", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "b");
     }
 
     PUTS("The many1 parser fails...");
@@ -352,8 +306,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("bAAAAb"));
 
       ASSERT(!result.ok);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "bAAAAb", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "bAAAAb");
       ASSERT(STRCMP(result.err, "p_many_1_a: too few") == 0);
     }
 
@@ -396,7 +349,7 @@ int cpc_basic_test_run(void) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         ASSERT(STRNCMP(slice_.ptr, "A", slice_.len) == 0);
       }
-      ASSERT(result.rest.len == 0);
+      ASSERT_REST_EMPTY(result);
     }
 
     {
@@ -405,8 +358,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("bb"));
 
       ASSERT(!result.ok);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "bb", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "bb");
     }
 
     {
@@ -438,32 +390,22 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = p_till_b(NULL, cpc_slice_from_cstr("bbbbaaaa"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "bbbb", result.out.as.slice.len) == 0);
-    ASSERT(result.out.as.slice.len == 4);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "aaaa", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "bbbb");
+    ASSERT_REST_EQ(result, "aaaa");
 
     PUTS("The taketill parser returns empty when the predicate matches at the first char...");
 
     CpcResult result2 = p_till_b(NULL, cpc_slice_from_cstr("aaaa"));
 
-    ASSERT(result2.ok);
-    ASSERT(cpc_is_slice(&result2.out));
-    ASSERT(result2.out.as.slice.len == 0);
-    ASSERT(result2.rest.len != 0);
-    ASSERT(STRNCMP(result2.rest.ptr, "aaaa", result2.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result2, "");
+    ASSERT_REST_EQ(result2, "aaaa");
 
     PUTS("The taketill parser consumes the whole input when it hits eof...");
 
     CpcResult result3 = p_till_b(NULL, cpc_slice_from_cstr("bbbb"));
 
-    ASSERT(result3.ok);
-    ASSERT(cpc_is_slice(&result3.out));
-    ASSERT(STRNCMP(result3.out.as.slice.ptr, "bbbb", result3.out.as.slice.len) == 0);
-    ASSERT(result3.out.as.slice.len == 4);
-    ASSERT(result3.rest.len == 0);
+    ASSERT_OUT_SLICE_EQ(result3, "bbbb");
+    ASSERT_REST_EMPTY(result3);
   }
 
   {
@@ -485,8 +427,7 @@ int cpc_basic_test_run(void) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         ASSERT(STRNCMP(slice_.ptr, "A", slice_.len) == 0);
       }
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, " B", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, " B");
     }
 
     {
@@ -497,8 +438,7 @@ int cpc_basic_test_run(void) {
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
       ASSERT(result.out.as.list.len == 0);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "B B B", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "B B B");
     }
 
     {
@@ -545,8 +485,7 @@ int cpc_basic_test_run(void) {
         CpcSlice slice_ = cpc_val_list_at(&arena, &result.out, i)->as.slice;
         ASSERT(STRNCMP(slice_.ptr, "A", slice_.len) == 0);
       }
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, " B", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, " B");
     }
 
     {
@@ -555,8 +494,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_A_sep_by_1_space(&arena, cpc_slice_from_cstr("B A A"));
 
       ASSERT(!result.ok);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "B A A", result.rest.len) == 0);
+      ASSERT_REST_EQ(result, "B A A");
       ASSERT(STRCMP(result.err, "p_A_sep_by_1_space: too few") == 0);
     }
 
@@ -595,12 +533,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\r\nrest"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "\r\n", result.out.as.slice.len) == 0);
-    ASSERT(result.out.as.slice.len == 2);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "\r\n");
+    ASSERT_REST_EQ(result, "rest");
   }
 
   {
@@ -608,12 +542,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("\nrest"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "\n", result.out.as.slice.len) == 0);
-    ASSERT(result.out.as.slice.len == 1);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "\n");
+    ASSERT_REST_EQ(result, "rest");
   }
 
   {
@@ -622,8 +552,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = CPC_END_OF_LINE_(NULL, cpc_slice_from_cstr("A"));
 
     ASSERT(!result.ok);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "A", result.rest.len) == 0);
+    ASSERT_REST_EQ(result, "A");
     ASSERT(STRCMP(result.err, "CPC_LINE_ENDING: expected newline") == 0);
   }
 
@@ -644,7 +573,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = CPC_EOF_(NULL, cpc_slice_from_cstr(""));
 
     ASSERT(result.ok);
-    ASSERT(result.rest.len == 0);
+    ASSERT_REST_EMPTY(result);
   }
 
   {
@@ -653,8 +582,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = CPC_EOF_(NULL, cpc_slice_from_cstr("A"));
 
     ASSERT(!result.ok);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "A", result.rest.len) == 0);
+    ASSERT_REST_EQ(result, "A");
     ASSERT(STRCMP(result.err, "CPC_EOF_: expected eof") == 0);
   }
 
@@ -681,11 +609,8 @@ int cpc_basic_test_run(void) {
 
       CpcResult result = p_dquote(NULL, cpc_slice_from_cstr("\"\"abc"));
 
-      ASSERT(result.ok);
-      ASSERT(cpc_is_slice(&result.out));
-      ASSERT(STRNCMP(result.out.as.slice.ptr, "\"", result.out.as.slice.len) == 0);
-      ASSERT(result.rest.len != 0);
-      ASSERT(STRNCMP(result.rest.ptr, "abc", result.rest.len) == 0);
+      ASSERT_OUT_SLICE_EQ(result, "\"");
+      ASSERT_REST_EQ(result, "abc");
     }
   }
 
@@ -698,19 +623,13 @@ int cpc_basic_test_run(void) {
 
     CpcResult plain = p_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
 
-    ASSERT(plain.ok);
-    ASSERT(cpc_is_slice(&plain.out));
-    ASSERT(STRNCMP(plain.out.as.slice.ptr, "token", plain.out.as.slice.len) == 0);
-    ASSERT(plain.rest.len != 0);
-    ASSERT(STRNCMP(plain.rest.ptr, "rest", plain.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(plain, "token");
+    ASSERT_REST_EQ(plain, "rest");
 
     CpcResult result = p_match_token_semicol(NULL, cpc_slice_from_cstr("token;rest"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "token;", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "token;");
+    ASSERT_REST_EQ(result, "rest");
   }
 
   {
@@ -725,17 +644,13 @@ int cpc_basic_test_run(void) {
 
     CpcResult result1 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
 
-    ASSERT(result1.ok);
-    ASSERT(cpc_is_slice(&result1.out));
-    ASSERT(STRNCMP(result1.out.as.slice.ptr, "AB", result1.out.as.slice.len) == 0);
-    ASSERT(STRNCMP(result1.rest.ptr, "rest", result1.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result1, "AB");
+    ASSERT_REST_EQ(result1, "rest");
     ASSERT(arena.offset == 0);
 
     CpcResult result2 = p_match_ab(&arena, cpc_slice_from_cstr("ABrest"));
 
-    ASSERT(result2.ok);
-    ASSERT(cpc_is_slice(&result2.out));
-    ASSERT(STRNCMP(result2.out.as.slice.ptr, "AB", result2.out.as.slice.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result2, "AB");
     ASSERT(arena.offset == 0);
   }
 
@@ -744,11 +659,8 @@ int cpc_basic_test_run(void) {
 
     CpcResult result = CPC_ANY_(NULL, cpc_slice_from_cstr("Arest"));
 
-    ASSERT(result.ok);
-    ASSERT(cpc_is_slice(&result.out));
-    ASSERT(STRNCMP(result.out.as.slice.ptr, "A", result.out.as.slice.len) == 0);
-    ASSERT(result.rest.len != 0);
-    ASSERT(STRNCMP(result.rest.ptr, "rest", result.rest.len) == 0);
+    ASSERT_OUT_SLICE_EQ(result, "A");
+    ASSERT_REST_EQ(result, "rest");
   }
 
   {
@@ -757,7 +669,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = CPC_ANY_(NULL, cpc_slice_from_cstr(""));
 
     ASSERT(!result.ok);
-    ASSERT(result.rest.len == 0);
+    ASSERT_REST_EMPTY(result);
     ASSERT(STRCMP(result.err, "CPC_ANY_: eof") == 0);
   }
 
@@ -769,7 +681,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_any_l(NULL, cpc_slice_from_cstr(""));
 
     ASSERT(!result.ok);
-    ASSERT(result.rest.len == 0);
+    ASSERT_REST_EMPTY(result);
     ASSERT(STRCMP(result.err, "expected any char") == 0);
   }
 

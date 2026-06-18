@@ -7,6 +7,8 @@
 
 #include "utils.h"
 
+#include "assertions.h"
+
 #include "basic.h"
 
 int main(void) {

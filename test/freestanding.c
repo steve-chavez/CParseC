@@ -28,6 +28,8 @@ int test_strncmp(const char *s1, const char *s2, int n) {
 #define STRCMP(s1, s2) test_strcmp((s1), (s2))
 #define STRNCMP(s1, s2, n) test_strncmp((s1), (s2), (n))
 
+#include "assertions.h"
+
 #include "cparsec.h"
 
 #include "basic.h"
