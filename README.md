@@ -22,7 +22,7 @@ A CSV parser looks like this:
 #define CPC_USE_MEMCHR
 #include "cparsec.h"
 
-CPC_TAKE_QUOTED_BY(quotedField, '"')
+CPC_TAKE_QUOTED(quotedField, '"')
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
 CPC_STRING(p_comma, ",")
@@ -74,7 +74,7 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 ### SIMD combinators
 
 - `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses `memchr` so it's SIMD-friendly.
-- `CPC_TAKE_QUOTED_BY`: parses a quoted string, handling double quotes as escaped content. Returns a slice.
+- `CPC_TAKE_QUOTED`: parses a quoted string, handling double quotes as escaped content. Returns a slice.
 
 ### Labels
 

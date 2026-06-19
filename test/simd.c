@@ -46,7 +46,7 @@ int main(void) {
   }
 
   {
-    CPC_TAKE_QUOTED_BY(p_span_dquoted, '"')
+    CPC_TAKE_QUOTED(p_span_dquoted, '"')
 
     {
       PUTS("The take_quoted parser works with doubled quotes...");
@@ -121,7 +121,7 @@ int main(void) {
       ASSERT_REST_EQ(result, "\"abcde\"\"");
     }
 
-    CPC_TAKE_QUOTED_BY(p_span_squoted, '\'')
+    CPC_TAKE_QUOTED(p_span_squoted, '\'')
 
     {
       PUTS("The take_quoted parser works with single quotes...");

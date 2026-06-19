@@ -409,7 +409,7 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     }
 
 // Parses a quoted string, handling doubled quotes as escaped content. Returns a slice.
-#  define CPC_TAKE_QUOTED_BY(name, quote)                                                          \
+#  define CPC_TAKE_QUOTED(name, quote)                                                             \
     CPC_DEFINE_PARSER(name) {                                                                      \
       /* rejects anything that is too short (quoted would need at least 3 chars) or does not start \
        * with the quote*/                                                                          \
