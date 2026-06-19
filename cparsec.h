@@ -149,7 +149,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
                       cpc_slice_sub(input, slice.len, input.len - slice.len));                     \
   }
 
-#define CPC_STRING(name, lit) ___CPC_STRING(name, lit, #name ": mismatch")
+#define CPC_STRING(name, lit) ___CPC_STRING(name, lit, "mismatch")
 #define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
 
 #define ___CPC_ANY(name, err)                                                                      \
@@ -160,7 +160,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
   }
 
 // Succeeds if there is at least one character of input. Returns the parsed character.
-static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
+static inline ___CPC_ANY(CPC_ANY_, "eof")
 #define CPC_ANY_LABEL(name, label) ___CPC_ANY(name, label)
 
 #define ___CPC_ONE_OF(name, chars, err)                                                            \
@@ -174,7 +174,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
   }
 
 // Succeeds if the character is in the supplied string. Returns the parsed character.
-#define CPC_ONE_OF(name, chars) ___CPC_ONE_OF(name, chars, #name ": none matched")
+#define CPC_ONE_OF(name, chars) ___CPC_ONE_OF(name, chars, "none matched")
 #define CPC_ONE_OF_LABEL(name, chars, label) ___CPC_ONE_OF(name, chars, label)
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
@@ -221,11 +221,9 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
                                                                                                    \
     CpcValue out = cpc_val_list(A);                                                                \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r1.out))                                                       \
-      return cpc_res_err(r1.rest, #name ": arena surpassed");                                      \
+    if (!cpc_val_list_push(A, &out, r1.out)) return cpc_res_err(r1.rest, "arena surpassed");       \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r2.out))                                                       \
-      return cpc_res_err(r1.rest, #name ": arena surpassed");                                      \
+    if (!cpc_val_list_push(A, &out, r2.out)) return cpc_res_err(r2.rest, "arena surpassed");       \
                                                                                                    \
     return cpc_res_ok(out, r2.rest);                                                               \
   }
@@ -253,7 +251,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 // input: it will fail if the predicate never returns true or if there is no
 // input left.
 #define CPC_TAKE_WHILE_1(name, pred)                                                               \
-  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, #name ": too few"))
+  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, "too few"))
 #define CPC_TAKE_WHILE_1_LABEL(name, pred, label)                                                  \
   ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, (label)))
 
@@ -274,9 +272,8 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
       if (!r.ok) {                                                                                 \
         break;                                                                                     \
       }                                                                                            \
-      if (cpc_no_progress_made(r.rest, cur)) return cpc_res_err(input, #name ": no progress");     \
-      if (!cpc_val_list_push(A, &out, r.out))                                                      \
-        return cpc_res_err(input, #name ": arena surpassed");                                      \
+      if (cpc_no_progress_made(r.rest, cur)) return cpc_res_err(input, "no progress");             \
+      if (!cpc_val_list_push(A, &out, r.out)) return cpc_res_err(input, "arena surpassed");        \
       cur = r.rest;                                                                                \
       count++;                                                                                     \
     }                                                                                              \
@@ -286,10 +283,10 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 // Parses zero or more occurrences of the given parser.
 // Unlike the Haskell version this will always terminate, even when paired with
 // takewhile. Does not fail.
-#define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0, #name ": too few")
+#define CPC_MANY(name, parser) ___CPC_MANY(name, parser, 0, "too few")
 
 // Parses one or more occurrences of the given parser.
-#define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1, #name ": too few")
+#define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1, "too few")
 #define CPC_MANY_1_LABEL(name, parser, label) ___CPC_MANY(name, parser, 1, label)
 
 // Parses zero or more occurrences of parser `item`, until parser `end`
@@ -306,9 +303,8 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
       CpcResult ritem = (item)(A, cur);                                                            \
       if (!ritem.ok) return ritem;                                                                 \
                                                                                                    \
-      if (cpc_no_progress_made(ritem.rest, cur)) return cpc_res_err(input, #name ": no progress"); \
-      if (!cpc_val_list_push(A, &out, ritem.out))                                                  \
-        return cpc_res_err(input, #name ": arena surpassed");                                      \
+      if (cpc_no_progress_made(ritem.rest, cur)) return cpc_res_err(input, "no progress");         \
+      if (!cpc_val_list_push(A, &out, ritem.out)) return cpc_res_err(input, "arena surpassed");    \
                                                                                                    \
       cur = ritem.rest;                                                                            \
     }                                                                                              \
@@ -323,8 +319,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
       return first_not_ok;                                                                         \
     }                                                                                              \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, first.out))                                                    \
-      return cpc_res_err(input, #name ": arena surpassed");                                        \
+    if (!cpc_val_list_push(A, &out, first.out)) return cpc_res_err(input, "arena surpassed");      \
                                                                                                    \
     cur = first.rest;                                                                              \
     /* this loop will always terminate, see below conditions */                                    \
@@ -339,11 +334,10 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
         break;                                                                                     \
       }                                                                                            \
                                                                                                    \
-      if (!cpc_val_list_push(A, &out, next.out))                                                   \
-        return cpc_res_err(input, #name ": arena surpassed");                                      \
+      if (!cpc_val_list_push(A, &out, next.out)) return cpc_res_err(input, "arena surpassed");     \
                                                                                                    \
       cur = next.rest;                                                                             \
-      if (cpc_no_progress_made(cur, before_sep)) return cpc_res_err(input, #name ": no progress"); \
+      if (cpc_no_progress_made(cur, before_sep)) return cpc_res_err(input, "no progress");         \
     }                                                                                              \
     return cpc_res_ok(out, cur);                                                                   \
   }
@@ -354,8 +348,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
 
 // Parses one or more occurrences of `item`, separated by `sep`.
 // Returns a list of values returned by `item`.
-#define CPC_SEP_BY_1(name, item, sep)                                                              \
-  ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, #name ": too few"))
+#define CPC_SEP_BY_1(name, item, sep) ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, "too few"))
 #define CPC_SEP_BY_1_LABEL(name, item, sep, label)                                                 \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, (label)))
 
@@ -420,8 +413,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
     CPC_DEFINE_PARSER(name) {                                                                      \
       /* rejects anything that is too short (quoted would need at least 3 chars) or does not start \
        * with the quote*/                                                                          \
-      if (input.len < 2 || input.ptr[0] != (quote))                                                \
-        return cpc_res_err(input, #name ": missing quote");                                        \
+      if (input.len < 2 || input.ptr[0] != (quote)) return cpc_res_err(input, "missing quote");    \
       /* start after the opening quote */                                                          \
       size_t span = 1;                                                                             \
       while (span < input.len) {                                                                   \
@@ -440,7 +432,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
                           cpc_slice_sub(input, span, input.len - span));                           \
       }                                                                                            \
       /* err if no closing quote is found */                                                       \
-      return cpc_res_err(input, #name ": missing quote");                                          \
+      return cpc_res_err(input, "missing quote");                                                  \
     }
 #endif
 
@@ -450,7 +442,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
   }
 
     // parser that only matches if all the input has been consumed
-    static inline ___CPC_EOF(CPC_EOF_, "CPC_EOF_: expected eof")
+    static inline ___CPC_EOF(CPC_EOF_, "expected eof")
 
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
@@ -472,7 +464,7 @@ static inline ___CPC_ANY(CPC_ANY_, "CPC_ANY_: eof")
   }
 
     // Parses a CRLF (see crlf) or LF (see newline) end-of-line
-    static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "CPC_LINE_ENDING: expected newline")
+    static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "expected newline")
 #define CPC_END_OF_LINE_LABEL(name, label) ___CPC_END_OF_LINE(name, label)
 
 #endif /* CPARSEC_H_INCLUDED */

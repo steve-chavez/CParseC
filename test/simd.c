@@ -81,7 +81,7 @@ int main(void) {
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("plain"));
 
       ASSERT_OUT_NOTHING(result);
-      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
+      ASSERT_ERR_EQ(result, "missing quote");
     }
 
     {
@@ -90,7 +90,7 @@ int main(void) {
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr(""));
 
       ASSERT_OUT_NOTHING(result);
-      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
+      ASSERT_ERR_EQ(result, "missing quote");
     }
 
     {
@@ -99,7 +99,7 @@ int main(void) {
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"unterminated"));
 
       ASSERT_OUT_NOTHING(result);
-      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
+      ASSERT_ERR_EQ(result, "missing quote");
     }
 
     {
@@ -108,7 +108,7 @@ int main(void) {
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\""));
 
       ASSERT_OUT_NOTHING(result);
-      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
+      ASSERT_ERR_EQ(result, "missing quote");
     }
 
     {
@@ -117,7 +117,7 @@ int main(void) {
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"abcde\"\""));
 
       ASSERT_OUT_NOTHING(result);
-      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
+      ASSERT_ERR_EQ(result, "missing quote");
       ASSERT_REST_EQ(result, "\"abcde\"\"");
     }
 
