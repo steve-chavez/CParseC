@@ -34,7 +34,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("unknown leftovers"));
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "unknown leftovers");
-    ASSERT(STRCMP(result.err, "p_begin: mismatch") == 0);
+    ASSERT_ERR_EQ(result, "p_begin: mismatch");
   }
 
   {
@@ -43,7 +43,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_begin(NULL, cpc_slice_from_cstr("a"));
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "a");
-    ASSERT(STRCMP(result.err, "p_begin: mismatch") == 0);
+    ASSERT_ERR_EQ(result, "p_begin: mismatch");
   }
 
   {
@@ -54,7 +54,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_begin_l(NULL, cpc_slice_from_cstr("a"));
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "a");
-    ASSERT(STRCMP(result.err, "this is wrong") == 0);
+    ASSERT_ERR_EQ(result, "this is wrong");
   }
 
   {
@@ -71,12 +71,12 @@ int cpc_basic_test_run(void) {
     CpcResult result2 = p_vowel(NULL, cpc_slice_from_cstr("banana"));
 
     ASSERT(!result2.ok);
-    ASSERT(STRCMP(result2.err, "p_vowel: none matched") == 0);
+    ASSERT_ERR_EQ(result2, "p_vowel: none matched");
 
     CpcResult result3 = p_vowel_l(NULL, cpc_slice_from_cstr("banana"));
 
     ASSERT(!result3.ok);
-    ASSERT(STRCMP(result3.err, "expected vowel") == 0);
+    ASSERT_ERR_EQ(result3, "expected vowel");
   }
 
   {
@@ -200,7 +200,7 @@ int cpc_basic_test_run(void) {
     CpcResult result2 = p_at_least_1_a(NULL, cpc_slice_from_cstr("bba"));
 
     ASSERT_OUT_NOTHING(result2);
-    ASSERT(STRCMP(result2.err, "p_at_least_1_a: too few") == 0);
+    ASSERT_ERR_EQ(result2, "p_at_least_1_a: too few");
     ASSERT_REST_EQ(result2, "bba");
 
     PUTS("The takewhile1 parser fails on empty input...");
@@ -208,7 +208,7 @@ int cpc_basic_test_run(void) {
     CpcResult result3 = p_at_least_1_a(NULL, cpc_slice_from_cstr(""));
 
     ASSERT_OUT_NOTHING(result3);
-    ASSERT(STRCMP(result3.err, "p_at_least_1_a: too few") == 0);
+    ASSERT_ERR_EQ(result3, "p_at_least_1_a: too few");
     ASSERT_REST_EMPTY(result3);
 
     PUTS("The takewhile1 parser can be labeled...");
@@ -218,7 +218,7 @@ int cpc_basic_test_run(void) {
     CpcResult result4 = p_at_least_1_a_l(NULL, cpc_slice_from_cstr("bba"));
 
     ASSERT(!result4.ok);
-    ASSERT(STRCMP(result4.err, "expected at least one a") == 0);
+    ASSERT_ERR_EQ(result4, "expected at least one a");
   }
 
   {
@@ -263,7 +263,7 @@ int cpc_basic_test_run(void) {
 
       CpcResult result = p_inf_many(&arena, cpc_slice_from_cstr("anything"));
 
-      ASSERT(STRCMP(result.err, "p_inf_many: no progress") == 0);
+      ASSERT_ERR_EQ(result, "p_inf_many: no progress");
     }
 
     PUTS("The many parser will fail if the arena doesn't have enough "
@@ -273,7 +273,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAA"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_many_a: arena surpassed") == 0);
+      ASSERT_ERR_EQ(result, "p_many_a: arena surpassed");
     }
   }
 
@@ -307,7 +307,7 @@ int cpc_basic_test_run(void) {
 
       ASSERT(!result.ok);
       ASSERT_REST_EQ(result, "bAAAAb");
-      ASSERT(STRCMP(result.err, "p_many_1_a: too few") == 0);
+      ASSERT_ERR_EQ(result, "p_many_1_a: too few");
     }
 
     PUTS("The many1 parser will fail if the arena doesn't have enough "
@@ -317,7 +317,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_1_a(&arena, cpc_slice_from_cstr("AAAAAAAAAAAAAA"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_many_1_a: arena surpassed") == 0);
+      ASSERT_ERR_EQ(result, "p_many_1_a: arena surpassed");
     }
 
     {
@@ -326,7 +326,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_1_a_l(&arena, cpc_slice_from_cstr("bAAAAb"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "expected one or more As") == 0);
+      ASSERT_ERR_EQ(result, "expected one or more As");
     }
   }
 
@@ -369,7 +369,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_inf_many_till(&arena, cpc_slice_from_cstr("abc"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_inf_many_till: no progress") == 0);
+      ASSERT_ERR_EQ(result, "p_inf_many_till: no progress");
     }
 
     {
@@ -379,7 +379,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_a_till_semicol(&arena, cpc_slice_from_cstr("AAAAAAAAAAA;"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_many_a_till_semicol: arena surpassed") == 0);
+      ASSERT_ERR_EQ(result, "p_many_a_till_semicol: arena surpassed");
     }
   }
 
@@ -448,7 +448,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_A_sep_by_space(&arena, cpc_slice_from_cstr("A A A A A A A A"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_A_sep_by_space: arena surpassed") == 0);
+      ASSERT_ERR_EQ(result, "p_A_sep_by_space: arena surpassed");
     }
 
     {
@@ -461,7 +461,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_inf_sep_by(&arena, cpc_slice_from_cstr("abc"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_inf_sep_by: no progress") == 0);
+      ASSERT_ERR_EQ(result, "p_inf_sep_by: no progress");
     }
   }
 
@@ -495,7 +495,7 @@ int cpc_basic_test_run(void) {
 
       ASSERT(!result.ok);
       ASSERT_REST_EQ(result, "B A A");
-      ASSERT(STRCMP(result.err, "p_A_sep_by_1_space: too few") == 0);
+      ASSERT_ERR_EQ(result, "p_A_sep_by_1_space: too few");
     }
 
     {
@@ -515,7 +515,7 @@ int cpc_basic_test_run(void) {
 
       CpcResult result = p_inf_sep_by_1(&arena, cpc_slice_from_cstr(","));
 
-      ASSERT(STRCMP(result.err, "p_inf_sep_by_1: no progress") == 0);
+      ASSERT_ERR_EQ(result, "p_inf_sep_by_1: no progress");
     }
 
     {
@@ -524,7 +524,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_A_sep_by_1_space_l(&arena, cpc_slice_from_cstr("B A A"));
 
       ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "expected one or more items") == 0);
+      ASSERT_ERR_EQ(result, "expected one or more items");
     }
   }
 
@@ -553,7 +553,7 @@ int cpc_basic_test_run(void) {
 
     ASSERT(!result.ok);
     ASSERT_REST_EQ(result, "A");
-    ASSERT(STRCMP(result.err, "CPC_LINE_ENDING: expected newline") == 0);
+    ASSERT_ERR_EQ(result, "CPC_LINE_ENDING: expected newline");
   }
 
   {
@@ -564,7 +564,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_eol_l(NULL, cpc_slice_from_cstr("A"));
 
     ASSERT(!result.ok);
-    ASSERT(STRCMP(result.err, "bad line ending") == 0);
+    ASSERT_ERR_EQ(result, "bad line ending");
   }
 
   {
@@ -583,7 +583,7 @@ int cpc_basic_test_run(void) {
 
     ASSERT(!result.ok);
     ASSERT_REST_EQ(result, "A");
-    ASSERT(STRCMP(result.err, "CPC_EOF_: expected eof") == 0);
+    ASSERT_ERR_EQ(result, "CPC_EOF_: expected eof");
   }
 
   {
@@ -594,7 +594,7 @@ int cpc_basic_test_run(void) {
     CpcResult result = p_eof_l(NULL, cpc_slice_from_cstr("A"));
 
     ASSERT(!result.ok);
-    ASSERT(STRCMP(result.err, "missing eof") == 0);
+    ASSERT_ERR_EQ(result, "missing eof");
   }
 
   {
@@ -670,7 +670,7 @@ int cpc_basic_test_run(void) {
 
     ASSERT(!result.ok);
     ASSERT_REST_EMPTY(result);
-    ASSERT(STRCMP(result.err, "CPC_ANY_: eof") == 0);
+    ASSERT_ERR_EQ(result, "CPC_ANY_: eof");
   }
 
   {
@@ -682,7 +682,7 @@ int cpc_basic_test_run(void) {
 
     ASSERT(!result.ok);
     ASSERT_REST_EMPTY(result);
-    ASSERT(STRCMP(result.err, "expected any char") == 0);
+    ASSERT_ERR_EQ(result, "expected any char");
   }
 
   return 0;

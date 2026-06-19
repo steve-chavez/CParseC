@@ -80,8 +80,8 @@ int main(void) {
 
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("plain"));
 
-      ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_span_dquoted: missing quote") == 0);
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
     }
 
     {
@@ -89,8 +89,8 @@ int main(void) {
 
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr(""));
 
-      ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_span_dquoted: missing quote") == 0);
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
     }
 
     {
@@ -98,8 +98,8 @@ int main(void) {
 
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"unterminated"));
 
-      ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_span_dquoted: missing quote") == 0);
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
     }
 
     {
@@ -107,8 +107,8 @@ int main(void) {
 
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\""));
 
-      ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_span_dquoted: missing quote") == 0);
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
     }
 
     {
@@ -116,8 +116,8 @@ int main(void) {
 
       CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"abcde\"\""));
 
-      ASSERT(!result.ok);
-      ASSERT(STRCMP(result.err, "p_span_dquoted: missing quote") == 0);
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "p_span_dquoted: missing quote");
       ASSERT_REST_EQ(result, "\"abcde\"\"");
     }
 
