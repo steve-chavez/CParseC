@@ -1,12 +1,10 @@
 // This tries to imitate bench/haskell/ParseCSV.hs, but the parser is row-based
 // instead of file-based as it's simpler to allocate memory this way.
+#define CPC_USE_UNNAMED
 #include "csv.h"
 
-CPC_STRING(p_lf, "\n")
-CPC_STRING(p_crlf, "\r\n")
-CPC_STRING(p_cr, "\r")
-CPC_ALT(p_newline_, p_lf, p_cr)
-CPC_ALT(p_newline, p_crlf, p_newline_)
+CPC_ALT(p_newline_, CPC_STRING_("\n"), CPC_STRING_("\r\n"))
+CPC_ALT(p_newline, p_newline_, CPC_STRING_("\r"))
 CPC_ALT(lineEnd, p_newline, CPC_EOF_)
 
 static inline bool is_unquoted_field(char c) {
@@ -20,9 +18,8 @@ static inline bool is_dquote(char c) {
 
 CPC_TAKE_WHILE_1(p_til_dquote, is_dquote)
 // These are the equivalent of `string "\"\"" >> return "\""`
-CPC_STRING(p_ddquote, "\"\"")
 CPC_PURE(pure_dquote, cpc_val_slice(cpc_slice_from_cstr("\"")))
-CPC_RIGHT(p_to_singlequote, p_ddquote, pure_dquote)
+CPC_RIGHT(p_to_singlequote, CPC_STRING_("\"\""), pure_dquote)
 CPC_ALT(insideQuotesPrime, p_til_dquote, p_to_singlequote)
 
 // TODO Find a better way to do equivalent of `T.concat <$> many insideQuotes`
@@ -51,12 +48,10 @@ CPC_DEFINE_PARSER(insideQuotes) {
 }
 
 // equivalent of `char '"' *> insideQuotes <* char '"'`
-CPC_STRING(p_dquote, "\"")
-CPC_BETWEEN(quotedField, p_dquote, insideQuotes, p_dquote)
+CPC_BETWEEN(quotedField, CPC_STRING_("\""), insideQuotes, CPC_STRING_("\""))
 
 CPC_ALT(field, quotedField, unquotedField)
 
-CPC_STRING(p_comma, ",")
-CPC_SEP_BY_1(record, field, p_comma)
+CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 
 CPC_LEFT(parse_csv_row, record, lineEnd)

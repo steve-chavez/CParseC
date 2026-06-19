@@ -133,11 +133,21 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // arena (and no error is thrown) and others don't use it.
 #define CPC_DEFINE_PARSER(name) CpcResult name(__attribute__((unused)) CpcArena *A, CpcSlice input)
 
+// This is guarded behind a macro because it requires nested functions
+#ifdef CPC_USE_UNNAMED
+#  define CPC_DEFINE_PARSER_(name, body) ({ CPC_DEFINE_PARSER(name) body name; })
+#endif
+
+// `##` does not expand `__COUNTER__` before token pasting, so an
+// extra macro is needed to build identifiers like `cpc_string_7`
+#define CPC_CONCAT_(x, y) x##y
+#define CPC_CONCAT(x, y) CPC_CONCAT_(x, y)
+
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with
 // `alt`
-#define ___CPC_STRING(name, lit, err)                                                              \
-  CPC_DEFINE_PARSER(name) {                                                                        \
+#define ___CPC_STRING_BODY(lit, err)                                                               \
+  {                                                                                                \
     const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                 \
                                                                                                    \
     if (input.len < slice.len) return cpc_res_err(input, (err));                                   \
@@ -149,8 +159,14 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
                       cpc_slice_sub(input, slice.len, input.len - slice.len));                     \
   }
 
+#define ___CPC_STRING(name, lit, err) CPC_DEFINE_PARSER(name) ___CPC_STRING_BODY(lit, err)
+
 #define CPC_STRING(name, lit) ___CPC_STRING(name, lit, "mismatch")
 #define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
+#ifdef CPC_USE_UNNAMED
+#  define CPC_STRING_(lit)                                                                         \
+    CPC_DEFINE_PARSER_(CPC_CONCAT(cpc_string_, __COUNTER__), ___CPC_STRING_BODY(lit, "mismatch"))
+#endif
 
 #define ___CPC_ANY(name, err)                                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \

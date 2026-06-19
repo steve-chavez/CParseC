@@ -11,5 +11,8 @@ fi
 echo -e "\n=== TEST: basic parsers\n"
 ./build/basic.o
 
+echo -e "\n=== TEST: unnamed parsers\n"
+./build/unnamed.o
+
 echo -e "\n=== TEST: SIMD parsers\n"
 ./build/simd.o
