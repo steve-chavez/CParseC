@@ -10,10 +10,10 @@ test: $(BUILD_DIR)/basic.o $(BUILD_DIR)/simd.o $(BUILD_DIR)/linkage.o $(BUILD_DI
 
 bench: $(BUILD_DIR)/attoparsec_csv $(BUILD_DIR)/csv_demo.o $(BUILD_DIR)/csv_simd_demo.o $(BUILD_DIR)/csv-rust-demo $(BENCH_DATA_DIR)/customers-1000000.csv
 
-$(BUILD_DIR)/basic.o: test/basic.c test/basic.h test/utils.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
+$(BUILD_DIR)/basic.o: test/basic.c test/basic.h test/hosted.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
 	cc $(CFLAGS) $(LDFLAGS) $< -o $@
 
-$(BUILD_DIR)/simd.o: test/simd.c test/utils.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
+$(BUILD_DIR)/simd.o: test/simd.c test/hosted.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
 	cc $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/attoparsec_csv: bench/haskell/ParseCSV.hs $(BUILD_DIR)/.gitignore

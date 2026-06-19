@@ -5,7 +5,7 @@
 
 #include "cparsec.h"
 
-#include "utils.h"
+#include "hosted.h"
 
 #include "assertions.h"
 

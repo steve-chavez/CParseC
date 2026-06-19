@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
+#include "hosted.h"
 
 #define CPC_USE_MEMCHR
 #include "assertions.h"
