@@ -15,7 +15,7 @@ diff -u \
 # Print the report in markdown
 echo -e "# Parsing 1M CSV rows"
 
-echo -e "\n## Haskell vs CParseC\n"
+echo -e "\n## CParseC vs Haskell \n"
 
 hyperfine --warmup 3 \
   './build/csv_demo.o < bench/data/customers-1000000.csv' \
@@ -24,7 +24,7 @@ hyperfine --warmup 3 \
 
 cat build/report-c-hs.md
 
-echo -e "\n## Rust vs CParseC\n"
+echo -e "\n## CParseC vs Rust\n"
 
 hyperfine --warmup 3 \
   './build/csv_simd_demo.o < bench/data/customers-1000000.csv' \

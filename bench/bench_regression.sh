@@ -1,7 +1,7 @@
 set -euo pipefail
 
 ref=$1
-bin=${2:-build/csv_demo.o}
+bin=$2
 tmpdir=$(mktemp -d)
 ref_worktree="$tmpdir/ref"
 
@@ -13,14 +13,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-make "$bin" bench/data/customers-1000000.csv
+make "$bin" bench/data/customers-1000000.csv > /dev/null
 
-git fetch origin "$ref"
-git worktree add --detach "$ref_worktree" FETCH_HEAD
-make -C "$ref_worktree" "$bin"
+git worktree add --detach "$ref_worktree" FETCH_HEAD > /dev/null
+make -C "$ref_worktree" "$bin" > /dev/null
 
-echo -e "\n## HEAD vs $ref for $bin\n"
+echo -e "\n## CParseC HEAD vs $ref for $bin\n"
 
-hyperfine \
+hyperfine --warmup 3 \
   "$bin < bench/data/customers-1000000.csv" \
-  "$ref_worktree/$bin < bench/data/customers-1000000.csv"
+  "$ref_worktree/$bin < bench/data/customers-1000000.csv" \
+  --export-markdown "build/report-head-$ref.md" 1>&2
+
+cat "build/report-head-$ref.md"
