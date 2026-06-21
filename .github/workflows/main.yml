@@ -34,6 +34,10 @@ jobs:
       - name: Run bench
         run: nix-shell --run "./bench/bench.sh" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Run bench regression
+        if: github.event_name == 'pull_request'
+        run: nix-shell --run "./bench/bench_regression.sh master build/csv_demo.o" >> "$GITHUB_STEP_SUMMARY"
+
   style:
     runs-on: ubuntu-latest
 
