@@ -1,7 +1,6 @@
 set -euo pipefail
 
-ref=$1
-bin=${2:-build/csv_demo.o}
+bin=${1:-build/csv_demo.o}
 tmpdir=$(mktemp -d)
 master_worktree="$tmpdir/master"
 
@@ -13,8 +12,10 @@ trap cleanup EXIT
 
 make "$bin" bench/data/customers-1000000.csv
 
-git worktree add --detach "$master_worktree" "$ref"
+git worktree add --detach "$master_worktree" master
 make -C "$master_worktree" "$bin"
+
+echo -e "\n## HEAD vs master for $bin\n"
 
 hyperfine \
   "$bin < bench/data/customers-1000000.csv" \
