@@ -1,5 +1,6 @@
 // A more efficient CSV parser than bench/c/CParseCSV.c, using SIMD parsers
 #define CPC_USE_MEMCHR
+#define CPC_USE_UNNAMED
 #include "csv.h"
 
 // Strip the outer quotes and collapse doubled quotes inside one quoted field
@@ -36,7 +37,6 @@ CPC_TAKE_QUOTED(quoted, '"')
 CPC_MAP(quotedField, quoted, unescape_quoted)
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
-CPC_STRING(p_comma, ",")
-CPC_SEP_BY_1(record, field, p_comma)
+CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
 CPC_LEFT(parse_csv_row, record, lineEnd)
