@@ -17,8 +17,10 @@ echo -e "# Parsing 1M CSV rows"
 
 echo -e "\n## CParseC vs Haskell \n"
 
+bin=./build/csv_simd_demo.o
+
 hyperfine --warmup 3 \
-  './build/csv_demo.o < bench/data/customers-1000000.csv' \
+  "$bin < bench/data/customers-1000000.csv" \
   './build/attoparsec_csv < bench/data/customers-1000000.csv' \
   --export-markdown build/report-c-hs.md 1>&2
 
@@ -27,7 +29,7 @@ cat build/report-c-hs.md
 echo -e "\n## CParseC vs Rust\n"
 
 hyperfine --warmup 3 \
-  './build/csv_simd_demo.o < bench/data/customers-1000000.csv' \
+  "$bin < bench/data/customers-1000000.csv" \
   './build/csv-rust-demo < bench/data/customers-1000000.csv' \
   --export-markdown build/report-c-rust.md 1>&2
 
