@@ -20,13 +20,13 @@ A CSV parser looks like this:
 
 ```c
 #define CPC_USE_MEMCHR
+#define CPC_USE_UNNAMED
 #include "cparsec.h"
 
 CPC_TAKE_QUOTED(quotedField, '"')
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
-CPC_STRING(p_comma, ",")
-CPC_SEP_BY_1(record, field, p_comma)
+CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
 CPC_LEFT(parse_csv_row, record, lineEnd)
 
@@ -40,7 +40,7 @@ int main(void){
 }
 ```
 
-When parsing 1 million CSV rows this parser is ~1.25 times faster than [BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv) and ~15 times faster than [attoparsec-csv](https://github.com/robinbb/attoparsec-csv/).
+When parsing 1 million CSV rows this parser is ~1.25 times faster than [BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv) and ~20 times faster than [attoparsec-csv](https://github.com/robinbb/attoparsec-csv/).
 See the [continuous benchmarking on CI](https://github.com/steve-chavez/CParseC/actions/runs/27530243247) to confirm the results.
 
 ## API
@@ -51,15 +51,15 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 
 - `CPC_STRING`
 - `CPC_STRING_`, requires `CPC_USE_UNNAMED`
-- `CPC_ALT` (`<|>`)
-- `CPC_RIGHT` (`*>`)
-- `CPC_LEFT` (`<*`)
-- `CPC_APPLY` (`<*>`)
+- `CPC_ALT`
+- `CPC_RIGHT`
+- `CPC_LEFT`
+- `CPC_APPLY`
 - `CPC_TAKE_WHILE_1`
 - `CPC_MANY_1`
 - `CPC_SEP_BY_1`
 - `CPC_PURE`
-- `CPC_MAP` (`<$>`)
+- `CPC_MAP`
 - `CPC_MANY`
 - `CPC_SEP_BY`
 - `CPC_TAKE_WHILE`
@@ -74,12 +74,12 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 
 ### SIMD combinators
 
-- `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses `memchr` so it's SIMD-friendly.
-- `CPC_TAKE_QUOTED`: parses a quoted string, handling double quotes as escaped content. Returns a slice.
+- `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses the SIMD-optimized `memchr`. Returns a slice.
+- `CPC_TAKE_QUOTED`: parses a quoted string, handling double quotes as escaped content. Uses `memchr` internally. Returns a slice.
 
-### Labels
+### Error Reporting
 
-The leaf parsers that can fail have a `_LABEL` variant that can be used to change the builtin error message.
+Parsers that can fail have a `_LABEL` variant that can be used to change the builtin error message.
 
 - `CPC_STRING_LABEL`
 - `CPC_TAKE_WHILE_1_LABEL`
@@ -90,15 +90,28 @@ The leaf parsers that can fail have a `_LABEL` variant that can be used to chang
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
 
-## Differences with Haskell
+Only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
 
-- Do or do not, there is no `try`. Unlike Haskell's Parsec we don't need a `try` since it's cheap to backtrack due to working with slices.
-  Parsers like `CPC_STRING` do not consume input if they fail.
-- CParseC parsers always terminate (many, manyTill, sepby, sepby1 can infinite loop in Haskell)
-- There's no equivalent for `>>` as this can be already expressed with `*>`, which is `CPC_RIGHT`. To express something like `string "\"\"" >> return "\""`, you can do:
-  ```c
-  CPC_STRING(p_ddquote, "\"\"")
-  CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
-  CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
-  ```
-- Only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
+> [!NOTE]
+> Why not a `CPC_LABEL` wrapper parser instead? We found out that the extra wrapping prevented inlining and affected performance on `cc45b07`
+
+## Haskell Comparison
+
+### Similarities with Haskell
+
+All the functions are inspired by Haskell Parsec or AttoParsec. Here's a table with the equivalences:
+
+| CParseC | Haskell |
+| --- | --- |
+| `CPC_ALT` | `<\|>` |
+| `CPC_RIGHT` | `*>` |
+| `CPC_LEFT` | `<*` |
+| `CPC_APPLY` | `<*>` |
+| `CPC_MAP` | `<$>` |
+| `CPC_PURE` | `pure` |
+
+### Differences with Haskell
+
+- Do or do not, there is no `try`. Unlike Haskell's Parsec we don't need a `try` since it's cheap to backtrack due to working with slices. Parsers like `CPC_STRING` do not consume input if they fail.
+- CParseC parsers always terminate. Unlike `many`, `manyTill`, `sepby`, `sepby1` which can infinite loop in Haskell.
+- There's no equivalent for `>>` as this can be already expressed with `*>`, which is `CPC_RIGHT`.
