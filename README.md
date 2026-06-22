@@ -2,13 +2,13 @@
 
 Parsing on C has problems:
 
-- Flex and Bison generate hard to maintain code and complicates builds.
-- Handwritten parsers (recursive descent, state machine, etc) are also hard to maintain.
+- Handwritten parsers (recursive descent, state machine, etc) are hard to maintain.
+- Flex or Bison generated code is also hard to maintain plus it complicates builds.
 
 **CParseC** (**C** **Parse**r **C**ombinators) offers a solution to parsing that is flexible and performant:
 
 - Composable, expressive parsers written in plain C (inspired by Haskell's Parsec)
-- Single header file (cparsec.h) with zero dependencies (including no libc)
+- C99, single header file (cparsec.h) with no dependencies (no libc assumed by default)
 - Zero-copy parsing
 - No hidden allocations, user-supplied arena
 - Inlining-friendly, macros instead of function pointers in hot paths
@@ -19,6 +19,9 @@ Parsing on C has problems:
 A CSV parser looks like this:
 
 ```c
+#include <stdio.h>
+#include <stdlib.h>
+
 #define CPC_USE_MEMCHR
 #define CPC_USE_UNNAMED
 #include "cparsec.h"
@@ -30,17 +33,26 @@ CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
 CPC_LEFT(parse_csv_row, record, lineEnd)
 
-int main(void){
+int main(void) {
   CpcArena arena;
   CpcValue arena_storage[8192];
   cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-  //..
-  CpcSlice input = (CpcSlice){.ptr = buffer, .len = len};
-  CpcResult res = parse_csv_row(&arena, input);
+
+  const char csv[] = "alpha,\"beta\",\"ga,mm,a\",delta\n";
+  CpcSlice   input = cpc_slice_from_cstr(csv);
+  CpcResult  result = parse_csv_row(&arena, input);
+
+  for (size_t i = 0; i < result.out.as.list.len; ++i) {
+    const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);
+    CpcSlice        slice = cell->as.slice;
+    printf("%.*s\n", (int)slice.len, slice.ptr);
+  }
+
+  return EXIT_SUCCESS;
 }
 ```
 
-When parsing 1 million CSV rows this parser is ~1.25 times faster than [BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv) and ~20 times faster than [attoparsec-csv](https://github.com/robinbb/attoparsec-csv/).
+When parsing 1 million CSV rows the above parser is ~1.25 times faster than [BurntSushi/rust-csv](https://github.com/BurntSushi/rust-csv) and ~20 times faster than [attoparsec-csv](https://github.com/robinbb/attoparsec-csv/).
 See the [continuous benchmarking on CI](https://github.com/steve-chavez/CParseC/actions/runs/27530243247) to confirm the results.
 
 ## API
@@ -77,7 +89,7 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 - `CPC_TAKE_TILL_ONE_OF`: a combination of `CPC_TAKE_TILL` + `CPC_ONE_OF` that uses the SIMD-optimized `memchr`. Returns a slice.
 - `CPC_TAKE_QUOTED`: parses a quoted string, handling double quotes as escaped content. Uses `memchr` internally. Returns a slice.
 
-### Error Reporting
+### Error Reporting (WIP)
 
 Parsers that can fail have a `_LABEL` variant that can be used to change the builtin error message.
 
@@ -90,7 +102,7 @@ Parsers that can fail have a `_LABEL` variant that can be used to change the bui
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
 
-Only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
+For now only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
 
 > [!NOTE]
 > Why not a `CPC_LABEL` wrapper parser instead? We found out that the extra wrapping prevented inlining and affected performance on `cc45b07`
