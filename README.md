@@ -38,14 +38,15 @@ int main(void) {
   CpcValue arena_storage[8192];
   cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-  const char csv[] = "alpha,\"beta\",\"ga,mm,a\",delta\n";
+  const char csv[] = "alpha,\"beta\",\"ga,mm,a\",d\"\"elta\n";
   CpcSlice   input = cpc_slice_from_cstr(csv);
   CpcResult  result = parse_csv_row(&arena, input);
 
   for (size_t i = 0; i < result.out.as.list.len; ++i) {
     const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);
     CpcSlice        slice = cell->as.slice;
-    printf("%.*s\n", (int)slice.len, slice.ptr);
+    printf("%.*s  ", (int)slice.len, slice.ptr);
+    //alpha  "beta"  "ga,mm,a"  delta
   }
 
   return EXIT_SUCCESS;
@@ -105,7 +106,7 @@ The internal error messages that show the conditions of `arena surpassed` and `n
 For now only the parsers that can fail and have a builtin error message can have their error message overriden with a `_LABEL` variant of the parser.
 
 > [!NOTE]
-> Why not a `CPC_LABEL` wrapper parser instead? We found out that the extra wrapping prevented inlining and affected performance on `cc45b07`
+> Why not a `CPC_LABEL` wrapper parser instead? We found out that the extra wrapping prevented inlining and affected performance on [cc45b07](https://github.com/steve-chavez/CParseC/commit/cc45b07)
 
 ## Haskell Comparison
 
