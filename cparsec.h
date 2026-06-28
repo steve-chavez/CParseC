@@ -197,10 +197,17 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
 #define CPC_ALT(name, x, y)                                                                        \
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcResult res = (x)(A, input);                                                                 \
-    if (res.ok)                                                                                    \
-      return res;                                                                                  \
-    else                                                                                           \
-      return (y)(A, input);                                                                        \
+    if (res.ok) return res;                                                                        \
+    return (y)(A, input);                                                                          \
+  }
+
+#define CPC_ALT_LABEL(name, x, y, label)                                                           \
+  CPC_DEFINE_PARSER(name) {                                                                        \
+    CpcResult res = (x)(A, input);                                                                 \
+    if (res.ok) return res;                                                                        \
+    res = (y)(A, input);                                                                           \
+    if (!res.ok) res.err = (label);                                                                \
+    return res;                                                                                    \
   }
 
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`

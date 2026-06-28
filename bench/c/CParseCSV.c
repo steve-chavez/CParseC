@@ -5,7 +5,7 @@
 
 CPC_ALT(p_newline_, CPC_STRING_("\n"), CPC_STRING_("\r\n"))
 CPC_ALT(p_newline, p_newline_, CPC_STRING_("\r"))
-CPC_ALT(lineEnd, p_newline, CPC_EOF_)
+CPC_ALT_LABEL(lineEnd, p_newline, CPC_EOF_, "end of line")
 
 static inline bool is_unquoted_field(char c) {
   return c != ',' && c != '\n' && c != '\r' && c != '"';
@@ -50,7 +50,7 @@ CPC_DEFINE_PARSER(insideQuotes) {
 // equivalent of `char '"' *> insideQuotes <* char '"'`
 CPC_BETWEEN(quotedField, CPC_STRING_("\""), insideQuotes, CPC_STRING_("\""))
 
-CPC_ALT(field, quotedField, unquotedField)
+CPC_ALT_LABEL(field, quotedField, unquotedField, "field")
 
 CPC_SEP_BY_1_LABEL(record, field, CPC_STRING_(","), "record")
 

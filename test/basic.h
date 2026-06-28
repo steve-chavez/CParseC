@@ -91,6 +91,18 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("The alt label parser overrides the fallback error...");
+
+    CPC_STRING_LABEL(p_begin_l, "BEGIN", "expected BEGIN")
+    CPC_STRING_LABEL(p_end_l, "END", "expected END")
+    CPC_ALT_LABEL(p_combined_l, p_begin_l, p_end_l, "expected BEGIN or END")
+
+    CpcResult result = p_combined_l(NULL, cpc_slice_from_cstr("bad"));
+    ASSERT_OUT_NOTHING(result);
+    ASSERT_ERR_EQ(result, "expected BEGIN or END");
+  }
+
+  {
     PUTS("The right parser works...");
 
     CPC_STRING(p_val, "value=")
