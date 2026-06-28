@@ -424,8 +424,8 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
                         cpc_slice_sub(input, end, input.len - end));                               \
     }
 
-// Parses a quoted string, handling doubled quotes as escaped content. Returns a slice.
-#  define CPC_TAKE_QUOTED(name, quote)                                                             \
+// Parses a quoted string and returns a slice. Using the escape char to treat escaped content.
+#  define CPC_TAKE_QUOTED(name, quote, escape)                                                     \
     CPC_DEFINE_PARSER(name) {                                                                      \
       /* rejects anything that is too short (quoted would need at least 3 chars) or does not start \
        * with the quote*/                                                                          \
@@ -437,10 +437,25 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
         const char *p = memchr(input.ptr + span, (quote), input.len - span);                       \
         if (!p) break;                                                                             \
         size_t idx = (size_t)(p - input.ptr);                                                      \
-        if ((idx + 1) < input.len && input.ptr[idx + 1] == (quote)) {                              \
-          /* A doubled quote is escaped content inside the quoted span */                          \
-          span = idx + 2;                                                                          \
-          continue;                                                                                \
+        if ((escape) == (quote)) {                                                                 \
+          if ((idx + 1) < input.len && input.ptr[idx + 1] == (quote)) {                            \
+            /* A doubled quote is escaped content inside the quoted span */                        \
+            span = idx + 2;                                                                        \
+            continue;                                                                              \
+          }                                                                                        \
+        } else {                                                                                   \
+          size_t escapes = 0;                                                                      \
+          /* Count consecutive escape chars immediately before this quote candidate. */            \
+          while (idx > escapes && input.ptr[idx - 1 - escapes] == (escape))                        \
+            escapes++;                                                                             \
+                                                                                                   \
+          /* A quote preceded by an odd number of escape chars is escaped content. */              \
+          /* An even number like `//"` would mean that the backlash itself is escaped plus */      \
+          /* `"` would be a lone quote. */                                                         \
+          if ((escapes & 1u) != 0) {                                                               \
+            span = idx + 1;                                                                        \
+            continue;                                                                              \
+          }                                                                                        \
         }                                                                                          \
         /* A lone quote closes the span, including the opening quote at index 0 */                 \
         span = idx + 1;                                                                            \

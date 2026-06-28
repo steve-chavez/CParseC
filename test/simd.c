@@ -46,7 +46,7 @@ int main(void) {
   }
 
   {
-    CPC_TAKE_QUOTED(p_span_dquoted, '"')
+    CPC_TAKE_QUOTED(p_span_dquoted, '"', '"')
 
     {
       PUTS("The take_quoted parser works with doubled quotes...");
@@ -121,7 +121,8 @@ int main(void) {
       ASSERT_REST_EQ(result, "\"abcde\"\"");
     }
 
-    CPC_TAKE_QUOTED(p_span_squoted, '\'')
+    CPC_TAKE_QUOTED(p_span_squoted, '\'', '\'')
+    CPC_TAKE_QUOTED(p_span_bsquoted, '\'', '\\')
 
     {
       PUTS("The take_quoted parser works with single quotes...");
@@ -139,6 +140,33 @@ int main(void) {
 
       ASSERT_OUT_SLICE_EQ(result, "'abcd''efg''hi'");
       ASSERT_REST_EQ(result, ",rest");
+    }
+
+    {
+      PUTS("The take_quoted parser works with backslash-escaped quotes...");
+
+      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\'def',rest"));
+
+      ASSERT_OUT_SLICE_EQ(result, "'abc\\'def'");
+      ASSERT_REST_EQ(result, ",rest");
+    }
+
+    {
+      PUTS("The take_quoted parser treats a quote after odd backslashes as escaped...");
+
+      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\\\\\'def',rest"));
+
+      ASSERT_OUT_SLICE_EQ(result, "'abc\\\\\\'def'");
+      ASSERT_REST_EQ(result, ",rest");
+    }
+
+    {
+      PUTS("The take_quoted parser treats a quote after even backslashes as unescaped...");
+
+      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\\\'def',rest"));
+
+      ASSERT_OUT_SLICE_EQ(result, "'abc\\\\'");
+      ASSERT_REST_EQ(result, "def',rest");
     }
   }
 

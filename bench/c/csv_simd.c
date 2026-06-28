@@ -33,7 +33,7 @@ static CpcResult unescape_quoted(__attribute__((unused)) CpcArena *A, const CpcV
   return cpc_res_ok(cpc_val_slice((CpcSlice){.ptr = out, .len = dst}), rest);
 }
 
-CPC_TAKE_QUOTED(quoted, '"')
+CPC_TAKE_QUOTED(quoted, '"', '"')
 CPC_MAP(quotedField, quoted, unescape_quoted)
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)

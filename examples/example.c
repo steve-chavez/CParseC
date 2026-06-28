@@ -6,7 +6,7 @@
 #define CPC_USE_UNNAMED
 #include "cparsec.h"
 
-CPC_TAKE_QUOTED(quotedField, '"')
+CPC_TAKE_QUOTED(quotedField, '"', '"')
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
 CPC_SEP_BY_1(record, field, CPC_STRING_(","))
