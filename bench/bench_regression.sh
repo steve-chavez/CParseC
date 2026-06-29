@@ -15,7 +15,7 @@ trap cleanup EXIT
 
 make "$bin" bench/data/customers-1000000.csv > /dev/null
 
-git worktree add --detach "$ref_worktree" FETCH_HEAD > /dev/null
+git worktree add --detach "$ref_worktree" "$ref" > /dev/null
 make -C "$ref_worktree" "$bin" > /dev/null
 
 echo -e "\n## CParseC HEAD vs $ref for $bin\n"
