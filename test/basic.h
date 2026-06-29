@@ -696,6 +696,17 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("The named any parser works...");
+
+    CPC_ANY(p_any)
+
+    CpcResult result = p_any(NULL, cpc_slice_from_cstr("Brest"));
+
+    ASSERT_OUT_SLICE_EQ(result, "B");
+    ASSERT_REST_EQ(result, "rest");
+  }
+
+  {
     PUTS("The any parser can be labeled...");
 
     CPC_ANY_LABEL(p_any_l, "expected any char")

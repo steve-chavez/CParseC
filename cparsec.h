@@ -176,6 +176,7 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
   }
 
 // Succeeds if there is at least one character of input. Returns the parsed character.
+#define CPC_ANY(name) ___CPC_ANY(name, "eof")
 static inline ___CPC_ANY(CPC_ANY_, "eof")
 #define CPC_ANY_LABEL(name, label) ___CPC_ANY(name, label)
 
