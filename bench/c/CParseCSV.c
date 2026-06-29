@@ -52,6 +52,6 @@ CPC_BETWEEN(quotedField, CPC_STRING_("\""), insideQuotes, CPC_STRING_("\""))
 
 CPC_ALT(field, quotedField, unquotedField)
 
-CPC_SEP_BY_1(record, field, CPC_STRING_(","))
+CPC_SEP_BY_1_LABEL(record, field, CPC_STRING_(","), "record")
 
 CPC_LEFT(parse_csv_row, record, lineEnd)
