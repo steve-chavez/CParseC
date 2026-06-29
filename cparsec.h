@@ -499,8 +499,9 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     return cpc_res_err(input, (err));                                                              \
   }
 
-    // Parses a CRLF (see crlf) or LF (see newline) end-of-line
-    static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "expected newline")
+// Parses a CRLF (see crlf) or LF (see newline) end-of-line
+#define CPC_END_OF_LINE(name) ___CPC_END_OF_LINE(name, "expected newline")
+        static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "expected newline")
 #define CPC_END_OF_LINE_LABEL(name, label) ___CPC_END_OF_LINE(name, label)
 
 #endif /* CPARSEC_H_INCLUDED */

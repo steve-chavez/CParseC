@@ -557,6 +557,17 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("The named end of line parser works...");
+
+    CPC_END_OF_LINE(p_eol)
+
+    CpcResult result = p_eol(NULL, cpc_slice_from_cstr("\nrest"));
+
+    ASSERT_OUT_SLICE_EQ(result, "\n");
+    ASSERT_REST_EQ(result, "rest");
+  }
+
+  {
     PUTS("The end of line parser can be labeled...");
 
     CPC_END_OF_LINE_LABEL(p_eol_l, "bad line ending")

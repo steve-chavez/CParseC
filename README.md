@@ -80,7 +80,7 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 - `CPC_TAKE_TILL`
 - `CPC_MATCH`
 - `CPC_ONE_OF`
-- `CPC_END_OF_LINE_`
+- `CPC_END_OF_LINE`
 - `CPC_ANY_`
 - `CPC_EOF`
 - `CPC_BETWEEN`
