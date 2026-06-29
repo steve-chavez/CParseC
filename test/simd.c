@@ -122,7 +122,6 @@ int main(void) {
     }
 
     CPC_TAKE_QUOTED(p_span_squoted, '\'', '\'')
-    CPC_TAKE_QUOTED(p_span_bsquoted, '\'', '\\')
 
     {
       PUTS("The take_quoted parser works with single quotes...");
@@ -141,6 +140,8 @@ int main(void) {
       ASSERT_OUT_SLICE_EQ(result, "'abcd''efg''hi'");
       ASSERT_REST_EQ(result, ",rest");
     }
+
+    CPC_TAKE_QUOTED(p_span_bsquoted, '\'', '\\')
 
     {
       PUTS("The take_quoted parser works with backslash-escaped quotes...");
@@ -167,6 +168,17 @@ int main(void) {
 
       ASSERT_OUT_SLICE_EQ(result, "'abc\\\\'");
       ASSERT_REST_EQ(result, "def',rest");
+    }
+
+    {
+      PUTS("The take_quoted parser can be labeled...");
+
+      CPC_TAKE_QUOTED_LABEL(p_span_dquoted_l, '"', '"', "expected quoted field")
+
+      CpcResult result = p_span_dquoted_l(NULL, cpc_slice_from_cstr("plain"));
+
+      ASSERT_OUT_NOTHING(result);
+      ASSERT_ERR_EQ(result, "expected quoted field");
     }
   }
 

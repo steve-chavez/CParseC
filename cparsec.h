@@ -425,11 +425,11 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     }
 
 // Parses a quoted string and returns a slice. Using the escape char to treat escaped content.
-#  define CPC_TAKE_QUOTED(name, quote, escape)                                                     \
+#  define ___CPC_TAKE_QUOTED(name, quote, escape, err)                                             \
     CPC_DEFINE_PARSER(name) {                                                                      \
       /* rejects anything that is too short (quoted would need at least 3 chars) or does not start \
        * with the quote*/                                                                          \
-      if (input.len < 2 || input.ptr[0] != (quote)) return cpc_res_err(input, "missing quote");    \
+      if (input.len < 2 || input.ptr[0] != (quote)) return cpc_res_err(input, (err));              \
       /* start after the opening quote */                                                          \
       size_t span = 1;                                                                             \
       while (span < input.len) {                                                                   \
@@ -463,8 +463,13 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
                           cpc_slice_sub(input, span, input.len - span));                           \
       }                                                                                            \
       /* err if no closing quote is found */                                                       \
-      return cpc_res_err(input, "missing quote");                                                  \
+      return cpc_res_err(input, (err));                                                            \
     }
+
+#  define CPC_TAKE_QUOTED(name, quote, escape)                                                     \
+    ___CPC_TAKE_QUOTED(name, quote, escape, "missing quote")
+#  define CPC_TAKE_QUOTED_LABEL(name, quote, escape, label)                                        \
+    ___CPC_TAKE_QUOTED(name, quote, escape, label)
 #endif
 
 #define ___CPC_EOF(name, err)                                                                      \

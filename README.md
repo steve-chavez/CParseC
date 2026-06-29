@@ -100,6 +100,7 @@ Parsers that can fail have a `_LABEL` variant that can be used to change the bui
 - `CPC_SEP_BY_1_LABEL`
 - `CPC_EOF_LABEL`
 - `CPC_ANY_LABEL`
+- `CPC_TAKE_QUOTED_LABEL`
 
 The internal error messages that show the conditions of `arena surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
 
