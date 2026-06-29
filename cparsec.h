@@ -477,9 +477,9 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (err));      \
   }
 
-    // parser that only matches if all the input has been consumed
+// parser that only matches if all the input has been consumed
+#define CPC_EOF(name) ___CPC_EOF(name, "expected eof")
     static inline ___CPC_EOF(CPC_EOF_, "expected eof")
-
 #define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
 
 #define ___CPC_END_OF_LINE(name, err)                                                              \

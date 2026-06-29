@@ -587,6 +587,17 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("The named eof parser works...");
+
+    CPC_EOF(p_eof)
+
+    CpcResult result = p_eof(NULL, cpc_slice_from_cstr(""));
+
+    ASSERT(result.ok);
+    ASSERT_REST_EMPTY(result);
+  }
+
+  {
     PUTS("The eof parser can be labeled...");
 
     CPC_EOF_LABEL(p_eof_l, "missing eof")

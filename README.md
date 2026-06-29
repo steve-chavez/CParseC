@@ -82,7 +82,7 @@ Docs are in progress, for now you can see the usage on [test/basic.h](test/basic
 - `CPC_ONE_OF`
 - `CPC_END_OF_LINE_`
 - `CPC_ANY_`
-- `CPC_EOF_`
+- `CPC_EOF`
 - `CPC_BETWEEN`
 
 ### SIMD combinators
