@@ -90,7 +90,7 @@ For convenience some parsers can be unnamed to reduce the overhead of naming eve
 need `#define CPC_USE_UNNAMED` since they require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
 and `__COUNTER__`).
 
-The `_LABEL` variants take an extra `label` parameter that can be used to change the builtin error message.
+The `_LABEL` variants take an extra `label` parameter to change the builtin error message.
 
 > [!NOTE]
 > The internal error messages that show the conditions of `arena size surpassed` and `no progress` (in case of badly written parsers with infinite loops) cannot be overridden.
