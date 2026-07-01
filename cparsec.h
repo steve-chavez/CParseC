@@ -14,6 +14,11 @@ typedef struct {
   size_t      len;
 } CpcSlice;
 
+typedef struct {
+  size_t start;
+  size_t len;
+} CpcList; // The list is a range in the arena [start..len]
+
 static inline CpcSlice cpc_slice_sub(CpcSlice s, size_t start, size_t len) {
   return (CpcSlice){.ptr = s.ptr + start, .len = len};
 }
@@ -32,11 +37,8 @@ typedef struct {
 
   union {
     CpcSlice slice;
-    struct {
-      size_t start;
-      size_t len;
-    } list; // The list is a range in the arena [start..len]
-    void *ptr;
+    CpcList  list;
+    void    *ptr;
   } as;
 } CpcValue;
 
