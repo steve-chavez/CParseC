@@ -14,15 +14,13 @@ typedef struct {
   size_t      len;
 } CpcSlice;
 
+// The list is a range in the arena [start..len]
 typedef struct {
   size_t start;
   size_t len;
-} CpcList; // The list is a range in the arena [start..len]
+} CpcList;
 
-static inline CpcSlice cpc_slice_sub(CpcSlice s, size_t start, size_t len) {
-  return (CpcSlice){.ptr = s.ptr + start, .len = len};
-}
-
+// obtain a CpcSlice from a c string
 static inline CpcSlice cpc_slice_from_cstr(const char *s) {
   size_t n = 0;
   while (s[n] != '\0')
@@ -30,8 +28,12 @@ static inline CpcSlice cpc_slice_from_cstr(const char *s) {
   return (CpcSlice){.ptr = s, .len = n};
 }
 
-typedef enum { CPC_NOTHING, CPC_SLICE, CPC_LIST, CPC_PTR } CpcValueKind;
+// a sub region of the slice
+static inline CpcSlice cpc_slice_sub(CpcSlice s, size_t start, size_t len) {
+  return (CpcSlice){.ptr = s.ptr + start, .len = len};
+}
 
+typedef enum { CPC_NOTHING, CPC_SLICE, CPC_LIST, CPC_PTR } CpcValueKind;
 typedef struct {
   CpcValueKind kind;
 
