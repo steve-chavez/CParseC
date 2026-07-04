@@ -46,7 +46,7 @@ int main(void) {
     const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);
     CpcSlice        slice = cell->as.slice;
     printf("%.*s  ", (int)slice.len, slice.ptr);
-    //alpha  "beta"  "ga,mm,a"  delta
+    //alpha  "beta"  "ga,mm,a"  d""elta
   }
 
   return EXIT_SUCCESS;
