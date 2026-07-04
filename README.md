@@ -70,21 +70,21 @@ All the macros basically generate inlinable functions that take other inlinable 
 | `CPC_LEFT(name, x, y)` | Runs `x` then `y`, returning only the output of `x`. | N/A | N/A |
 | `CPC_APPLY(name, x, y)` | Runs `x` then `y`, returning both outputs as a list. | N/A | N/A |
 | `CPC_TAKE_WHILE_1(name, pred)` | Consumes one or more characters while `pred` is true and returns the consumed slice. | `CPC_TAKE_WHILE_1_LABEL` | N/A |
+| `CPC_MANY(name, parser)` | Runs `parser` zero or more times and returns the outputs as a list. | N/A | N/A |
 | `CPC_MANY_1(name, parser)` | Runs `parser` one or more times and returns the outputs as a list. | `CPC_MANY_1_LABEL` | N/A |
+| `CPC_MANY_TILL(name, parser, end)` | Repeats `parser` until `end` succeeds, returning the collected outputs as a list. | N/A | N/A |
+| `CPC_SEP_BY(name, item, sep)` | Parses zero or more `item` values separated by `sep`, returning a list. | N/A | N/A |
 | `CPC_SEP_BY_1(name, item, sep)` | Parses one or more `item` values separated by `sep`, returning a list. | `CPC_SEP_BY_1_LABEL` | N/A |
 | `CPC_PURE(name, value)` | Succeeds without consuming input and returns `value`. | N/A | N/A |
 | `CPC_MAP(name, parser, fn)` | Runs `parser` and transforms its output with `fn`. | N/A | N/A |
-| `CPC_MANY(name, parser)` | Runs `parser` zero or more times and returns the outputs as a list. | N/A | N/A |
-| `CPC_SEP_BY(name, item, sep)` | Parses zero or more `item` values separated by `sep`, returning a list. | N/A | N/A |
 | `CPC_TAKE_WHILE(name, pred)` | Consumes zero or more characters while `pred` is true and returns the consumed slice. | N/A | N/A |
-| `CPC_MANY_TILL(name, parser, end)` | Repeats `parser` until `end` succeeds, returning the collected outputs as a list. | N/A | N/A |
 | `CPC_TAKE_TILL(name, pred)` | Consumes input until `pred` becomes true and returns the consumed slice. | N/A | N/A |
+| `CPC_BETWEEN(name, open, parser, close)` | Parses `open`, then `parser`, then `close`, returning only the output of `parser`. | N/A | N/A |
 | `CPC_MATCH(name, parser)` | Runs `parser` and returns the exact consumed input as a slice instead of its parsed value. | N/A | N/A |
 | `CPC_ONE_OF(name, chars)` | Succeeds if the next character is one of the characters in `chars`, returning it as a slice. | `CPC_ONE_OF_LABEL` | N/A |
 | `CPC_END_OF_LINE(name)` | Parses `\\n` or `\\r\\n` and returns the matched slice. | `CPC_END_OF_LINE_LABEL` | `CPC_END_OF_LINE_` |
 | `CPC_ANY(name)` | Consumes and returns any single character as a slice. | `CPC_ANY_LABEL` | `CPC_ANY_` |
 | `CPC_EOF(name)` | Succeeds only at end of input. | `CPC_EOF_LABEL` | `CPC_EOF_` |
-| `CPC_BETWEEN(name, open, parser, close)` | Parses `open`, then `parser`, then `close`, returning only the output of `parser`. | N/A | N/A |
 
 For convenience some parsers can be unnamed to reduce the overhead of naming every function. The ones that are marked with `*` like `CPC_STRING_`,
 need `#define CPC_USE_UNNAMED` since they require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
