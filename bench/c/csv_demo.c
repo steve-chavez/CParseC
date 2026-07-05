@@ -66,7 +66,7 @@ int main(void) {
                  sizeof(row_arena_storage) / sizeof(row_arena_storage[0]), NULL);
   CpcSlice input = (CpcSlice){.ptr = buffer, .len = len};
 
-  CpcResult header_res = parse_csv_row(&header_arena, input);
+  CpcResult header_res = parse_csv_row(input, &header_arena, NULL);
   if (!header_res.ok || !cpc_is_list(&header_res.out)) {
     fprintf(stderr, "failed to parse header");
     goto finally;
@@ -81,7 +81,7 @@ int main(void) {
 
   size_t row_index = 0;
   while (rest.len > 0) {
-    CpcResult row_res = parse_csv_row(&row_arena, rest);
+    CpcResult row_res = parse_csv_row(rest, &row_arena, NULL);
     if (!row_res.ok) {
       fprintf(stderr, "parse error");
       goto finally;

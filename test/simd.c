@@ -16,7 +16,8 @@ int main(void) {
 
       CPC_TAKE_TILL_ONE_OF(p_take_till_semicol_or_comma, ";,")
 
-      CpcResult result = p_take_till_semicol_or_comma(NULL, cpc_slice_from_cstr("token,rest"));
+      CpcResult result =
+          p_take_till_semicol_or_comma(cpc_slice_from_cstr("token,rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "token");
       ASSERT_REST_EQ(result, ",rest");
@@ -27,7 +28,7 @@ int main(void) {
 
       CPC_TAKE_TILL_ONE_OF(p_take_till_comma, ",")
 
-      CpcResult result = p_take_till_comma(NULL, cpc_slice_from_cstr(",rest"));
+      CpcResult result = p_take_till_comma(cpc_slice_from_cstr(",rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "");
       ASSERT_REST_EQ(result, ",rest");
@@ -38,7 +39,7 @@ int main(void) {
 
       CPC_TAKE_TILL_ONE_OF(p_take_till_semicol, ";")
 
-      CpcResult result = p_take_till_semicol(NULL, cpc_slice_from_cstr("token"));
+      CpcResult result = p_take_till_semicol(cpc_slice_from_cstr("token"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "token");
       ASSERT_REST_EMPTY(result);
@@ -51,7 +52,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with doubled quotes...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"a\"\"b\",rest"));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\"a\"\"b\",rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "\"a\"\"b\"");
       ASSERT_REST_EQ(result, ",rest");
@@ -60,7 +61,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with plain quoted text...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"abcdefgh\",rest"));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\"abcdefgh\",rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "\"abcdefgh\"");
       ASSERT_REST_EQ(result, ",rest");
@@ -69,7 +70,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with an empty quoted span...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"\",rest"));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\"\",rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "\"\"");
       ASSERT_REST_EQ(result, ",rest");
@@ -78,7 +79,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser fails if the opening quote is missing...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("plain"));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("plain"), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "missing quote");
@@ -87,7 +88,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser fails on empty input...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr(""));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr(""), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "missing quote");
@@ -96,7 +97,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser fails if the closing quote is missing...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"unterminated"));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\"unterminated"), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "missing quote");
@@ -105,7 +106,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser fails on a single quote char...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\""));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\""), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "missing quote");
@@ -114,7 +115,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser fails if input ends after a doubled quote...");
 
-      CpcResult result = p_span_dquoted(NULL, cpc_slice_from_cstr("\"abcde\"\""));
+      CpcResult result = p_span_dquoted(cpc_slice_from_cstr("\"abcde\"\""), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "missing quote");
@@ -126,7 +127,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with single quotes...");
 
-      CpcResult result = p_span_squoted(NULL, cpc_slice_from_cstr("'abcdefgh',rest"));
+      CpcResult result = p_span_squoted(cpc_slice_from_cstr("'abcdefgh',rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "'abcdefgh'");
       ASSERT_REST_EQ(result, ",rest");
@@ -135,7 +136,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with doubled single quotes...");
 
-      CpcResult result = p_span_squoted(NULL, cpc_slice_from_cstr("'abcd''efg''hi',rest"));
+      CpcResult result = p_span_squoted(cpc_slice_from_cstr("'abcd''efg''hi',rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "'abcd''efg''hi'");
       ASSERT_REST_EQ(result, ",rest");
@@ -146,7 +147,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser works with backslash-escaped quotes...");
 
-      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\'def',rest"));
+      CpcResult result = p_span_bsquoted(cpc_slice_from_cstr("'abc\\'def',rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "'abc\\'def'");
       ASSERT_REST_EQ(result, ",rest");
@@ -155,7 +156,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser treats a quote after odd backslashes as escaped...");
 
-      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\\\\\'def',rest"));
+      CpcResult result = p_span_bsquoted(cpc_slice_from_cstr("'abc\\\\\\'def',rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "'abc\\\\\\'def'");
       ASSERT_REST_EQ(result, ",rest");
@@ -164,7 +165,7 @@ int main(void) {
     {
       PUTS("The take_quoted parser treats a quote after even backslashes as unescaped...");
 
-      CpcResult result = p_span_bsquoted(NULL, cpc_slice_from_cstr("'abc\\\\'def',rest"));
+      CpcResult result = p_span_bsquoted(cpc_slice_from_cstr("'abc\\\\'def',rest"), NULL, NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "'abc\\\\'");
       ASSERT_REST_EQ(result, "def',rest");
@@ -175,7 +176,7 @@ int main(void) {
 
       CPC_TAKE_QUOTED_LABEL(p_span_dquoted_l, '"', '"', "expected quoted field")
 
-      CpcResult result = p_span_dquoted_l(NULL, cpc_slice_from_cstr("plain"));
+      CpcResult result = p_span_dquoted_l(cpc_slice_from_cstr("plain"), NULL, NULL);
 
       ASSERT_OUT_NOTHING(result);
       ASSERT_ERR_EQ(result, "expected quoted field");

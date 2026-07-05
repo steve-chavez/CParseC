@@ -13,7 +13,7 @@ int main(void) {
   {
     PUTS("The unnamed string parser can work standalone...");
 
-    CpcResult result = CPC_STRING_("END")(NULL, cpc_slice_from_cstr("END leftovers"));
+    CpcResult result = CPC_STRING_("END")(cpc_slice_from_cstr("END leftovers"), NULL, NULL);
     ASSERT_OUT_SLICE_EQ(result, "END");
     ASSERT_REST_EQ(result, " leftovers");
   }
@@ -23,7 +23,7 @@ int main(void) {
 
     CPC_ALT(p_combined_inline, CPC_STRING_("BEGIN"), CPC_STRING_("END"))
 
-    CpcResult result = p_combined_inline(NULL, cpc_slice_from_cstr("END leftovers"));
+    CpcResult result = p_combined_inline(cpc_slice_from_cstr("END leftovers"), NULL, NULL);
     ASSERT_OUT_SLICE_EQ(result, "END");
     ASSERT_REST_EQ(result, " leftovers");
   }

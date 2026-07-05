@@ -7,7 +7,7 @@
 static CpcResult unescape_quoted(__attribute__((unused)) CpcArena *A, const CpcValue *v,
                                  CpcSlice rest) {
   // TODO should not happen
-  if (!v || v->kind != CPC_SLICE) return cpc_res_err(rest, "csv: expected slice");
+  if (!v || v->kind != CPC_SLICE) return cpc_res_err(rest, "csv: expected slice", NULL);
 
   CpcSlice s = v->as.slice;
   // Leave non-quoted slices unchanged, only unescape fully quoted
@@ -36,7 +36,9 @@ static CpcResult unescape_quoted(__attribute__((unused)) CpcArena *A, const CpcV
 CPC_TAKE_QUOTED(quoted, '"', '"')
 CPC_MAP(quotedField, quoted, unescape_quoted)
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
-CPC_ALT(field, quotedField, unquotedField)
+CPC_ALT(field_, quotedField, unquotedField)
+CPC_LABEL(field, field_, "field")
 CPC_SEP_BY_1(record, field, CPC_STRING_(","))
-CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
+CPC_ALT(lineEnd_, CPC_END_OF_LINE_, CPC_EOF_)
+CPC_LABEL(lineEnd, lineEnd_, "end of line")
 CPC_LEFT(parse_csv_row, record, lineEnd)

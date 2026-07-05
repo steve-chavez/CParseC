@@ -5,7 +5,8 @@
 
 CPC_ALT(p_newline_, CPC_STRING_("\n"), CPC_STRING_("\r\n"))
 CPC_ALT(p_newline, p_newline_, CPC_STRING_("\r"))
-CPC_ALT(lineEnd, p_newline, CPC_EOF_)
+CPC_ALT(lineEnd_, p_newline, CPC_EOF_)
+CPC_LABEL(lineEnd, lineEnd_, "end of line")
 
 static inline bool is_unquoted_field(char c) {
   return c != ',' && c != '\n' && c != '\r' && c != '"';
@@ -30,12 +31,12 @@ CPC_DEFINE_PARSER(insideQuotes) {
 
   // TODO we duplicate some of the functionality of CPC_MANY(insideQuotesPrime)
   for (;;) {
-    const CpcResult piece = insideQuotesPrime(A, cur);
+    const CpcResult piece = insideQuotesPrime(cur, A, err);
     if (!piece.ok) {
       break;
     }
     if (!cpc_is_slice(&piece.out))
-      return cpc_res_err(cur, "insideQuotes_: not a slice"); // TODO should not happen
+      return cpc_res_err(cur, "insideQuotes_: not a slice", NULL); // TODO should not happen
 
     // This is the equivalent of `T.concat`
     for (size_t i = 0; i < piece.out.as.slice.len; ++i)
@@ -50,8 +51,10 @@ CPC_DEFINE_PARSER(insideQuotes) {
 // equivalent of `char '"' *> insideQuotes <* char '"'`
 CPC_BETWEEN(quotedField, CPC_STRING_("\""), insideQuotes, CPC_STRING_("\""))
 
-CPC_ALT(field, quotedField, unquotedField)
+CPC_ALT(field_, quotedField, unquotedField)
+CPC_LABEL(field, field_, "field")
 
-CPC_SEP_BY_1_LABEL(record, field, CPC_STRING_(","), "record")
+CPC_SEP_BY_1(record_, field, CPC_STRING_(","))
+CPC_LABEL(record, record_, "record")
 
 CPC_LEFT(parse_csv_row, record, lineEnd)

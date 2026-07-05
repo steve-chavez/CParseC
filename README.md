@@ -40,7 +40,7 @@ int main(void) {
 
   const char csv[] = "alpha,\"beta\",\"ga,mm,a\",d\"\"elta\n";
   CpcSlice   input = cpc_slice_from_cstr(csv);
-  CpcResult  result = parse_csv_row(&arena, input);
+  CpcResult  result = parse_csv_row(input, &arena, NULL);
 
   for (size_t i = 0; i < result.out.as.list.len; ++i) {
     const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);
