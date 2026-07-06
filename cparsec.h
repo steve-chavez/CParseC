@@ -154,53 +154,46 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with
 // `alt`
-#define ___CPC_STRING_BODY(lit, msg)                                                               \
+#define ___CPC_STRING_BODY(lit)                                                                    \
   {                                                                                                \
     const CpcSlice slice = {.ptr = (lit), .len = sizeof(lit) - 1};                                 \
                                                                                                    \
-    if (input.len < slice.len) return cpc_res_err(input, (msg), err);                              \
+    if (input.len < slice.len) return cpc_res_err(input, "mismatch", err);                         \
                                                                                                    \
     for (size_t i = 0; i < slice.len; ++i)                                                         \
-      if (input.ptr[i] != slice.ptr[i]) return cpc_res_err(input, (msg), err);                     \
+      if (input.ptr[i] != slice.ptr[i]) return cpc_res_err(input, "mismatch", err);                \
                                                                                                    \
     return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, slice.len)),                           \
                       cpc_slice_sub(input, slice.len, input.len - slice.len));                     \
   }
 
-#define ___CPC_STRING(name, lit, msg) CPC_DEFINE_PARSER(name) ___CPC_STRING_BODY(lit, msg)
-
-#define CPC_STRING(name, lit) ___CPC_STRING(name, lit, "mismatch")
-#define CPC_STRING_LABEL(name, lit, label) ___CPC_STRING(name, lit, label)
+#define CPC_STRING(name, lit) CPC_DEFINE_PARSER(name) ___CPC_STRING_BODY(lit)
 #ifdef CPC_USE_UNNAMED
 #  define CPC_STRING_(lit)                                                                         \
-    CPC_DEFINE_PARSER_(CPC_CONCAT(cpc_string_, __COUNTER__), ___CPC_STRING_BODY(lit, "mismatch"))
+    CPC_DEFINE_PARSER_(CPC_CONCAT(cpc_string_, __COUNTER__), ___CPC_STRING_BODY(lit))
 #endif
 
-#define ___CPC_ANY(name, msg)                                                                      \
+#define ___CPC_ANY(name)                                                                           \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    if (input.len == 0) return cpc_res_err(input, (msg), err);                                     \
+    if (input.len == 0) return cpc_res_err(input, "eof", err);                                     \
     return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                                   \
                       cpc_slice_sub(input, 1, input.len - 1));                                     \
   }
 
 // Succeeds if there is at least one character of input. Returns the parsed character.
-#define CPC_ANY(name) ___CPC_ANY(name, "eof")
-static inline ___CPC_ANY(CPC_ANY_, "eof")
-#define CPC_ANY_LABEL(name, label) ___CPC_ANY(name, label)
+#define CPC_ANY(name) ___CPC_ANY(name)
+static inline ___CPC_ANY(CPC_ANY_)
 
-#define ___CPC_ONE_OF(name, chars, msg)                                                            \
+// Succeeds if the character is in the supplied string. Returns the parsed character.
+#define CPC_ONE_OF(name, chars)                                                                    \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    if (input.len == 0) return cpc_res_err(input, (msg), err);                                     \
+    if (input.len == 0) return cpc_res_err(input, "none matched", err);                            \
     for (size_t i = 0; (chars)[i] != '\0'; i++)                                                    \
       if (input.ptr[0] == (chars)[i])                                                              \
         return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                               \
                           cpc_slice_sub(input, 1, input.len - 1));                                 \
-    return cpc_res_err(input, (msg), err);                                                         \
+    return cpc_res_err(input, "none matched", err);                                                \
   }
-
-// Succeeds if the character is in the supplied string. Returns the parsed character.
-#define CPC_ONE_OF(name, chars) ___CPC_ONE_OF(name, chars, "none matched")
-#define CPC_ONE_OF_LABEL(name, chars, label) ___CPC_ONE_OF(name, chars, label)
 
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)                                                                        \
@@ -282,8 +275,6 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
 // input left.
 #define CPC_TAKE_WHILE_1(name, pred)                                                               \
   ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, "too few", err))
-#define CPC_TAKE_WHILE_1_LABEL(name, pred, label)                                                  \
-  ___CPC_TAKE_WHILE(name, pred, if (i < 1) return cpc_res_err(input, (label), err))
 
 // Consume input as long as the predicate returns true, and return the consumed
 // input. This parser does not fail. If the predicate returns false at first
@@ -317,7 +308,6 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
 
 // Parses one or more occurrences of the given parser.
 #define CPC_MANY_1(name, parser) ___CPC_MANY(name, parser, 1, "too few")
-#define CPC_MANY_1_LABEL(name, parser, label) ___CPC_MANY(name, parser, 1, label)
 
 // Parses zero or more occurrences of parser `item`, until parser `end`
 // succeeds. Returns a list of values returned by p. Does not fail.
@@ -383,8 +373,6 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
 // Returns a list of values returned by `item`.
 #define CPC_SEP_BY_1(name, item, sep)                                                              \
   ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, "too few", err))
-#define CPC_SEP_BY_1_LABEL(name, item, sep, label)                                                 \
-  ___CPC_SEP_BY(name, item, sep, cpc_res_err(input, (label), err))
 
 // Returns a value wrapped in the parser. Does not fail.
 #define CPC_PURE(name, value_expr)                                                                 \
@@ -443,11 +431,12 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     }
 
 // Parses a quoted string and returns a slice. Using the escape char to treat escaped content.
-#  define ___CPC_TAKE_QUOTED(name, quote, escape, msg)                                             \
+#  define CPC_TAKE_QUOTED(name, quote, escape)                                                     \
     CPC_DEFINE_PARSER(name) {                                                                      \
       /* rejects anything that is too short (quoted would need at least 3 chars) or does not start \
        * with the quote*/                                                                          \
-      if (input.len < 2 || input.ptr[0] != (quote)) return cpc_res_err(input, (msg), err);         \
+      if (input.len < 2 || input.ptr[0] != (quote))                                                \
+        return cpc_res_err(input, "missing quote", err);                                           \
       /* start after the opening quote */                                                          \
       size_t span = 1;                                                                             \
       while (span < input.len) {                                                                   \
@@ -481,28 +470,23 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
                           cpc_slice_sub(input, span, input.len - span));                           \
       }                                                                                            \
       /* err if no closing quote is found */                                                       \
-      return cpc_res_err(input, (msg), err);                                                       \
+      return cpc_res_err(input, "missing quote", err);                                             \
     }
-
-#  define CPC_TAKE_QUOTED(name, quote, escape)                                                     \
-    ___CPC_TAKE_QUOTED(name, quote, escape, "missing quote")
-#  define CPC_TAKE_QUOTED_LABEL(name, quote, escape, label)                                        \
-    ___CPC_TAKE_QUOTED(name, quote, escape, label)
 #endif
 
-#define ___CPC_EOF(name, msg)                                                                      \
+#define ___CPC_EOF(name)                                                                           \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input) : cpc_res_err(input, (msg), err); \
+    return input.len == 0 ? cpc_res_ok(cpc_val_nothing(), input)                                   \
+                          : cpc_res_err(input, "expected eof", err);                               \
   }
 
 // parser that only matches if all the input has been consumed
-#define CPC_EOF(name) ___CPC_EOF(name, "expected eof")
-    static inline ___CPC_EOF(CPC_EOF_, "expected eof")
-#define CPC_EOF_LABEL(name, label) ___CPC_EOF(name, label)
+#define CPC_EOF(name) ___CPC_EOF(name)
+    static inline ___CPC_EOF(CPC_EOF_)
 
-#define ___CPC_END_OF_LINE(name, msg)                                                              \
+#define ___CPC_END_OF_LINE(name)                                                                   \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    if (input.len == 0) return cpc_res_err(input, (msg), err);                                     \
+    if (input.len == 0) return cpc_res_err(input, "expected newline", err);                        \
     const char *p = input.ptr;                                                                     \
     if (p[0] == '\r') {                                                                            \
       if (input.len >= 2 && p[1] == '\n')                                                          \
@@ -514,12 +498,11 @@ static inline ___CPC_ANY(CPC_ANY_, "eof")
     if (p[0] == '\n')                                                                              \
       return cpc_res_ok(cpc_val_slice(cpc_slice_sub(input, 0, 1)),                                 \
                         cpc_slice_sub(input, 1, input.len - 1));                                   \
-    return cpc_res_err(input, (msg), err);                                                         \
+    return cpc_res_err(input, "expected newline", err);                                            \
   }
 
 // Parses a CRLF (see crlf) or LF (see newline) end-of-line
-#define CPC_END_OF_LINE(name) ___CPC_END_OF_LINE(name, "expected newline")
-        static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_, "expected newline")
-#define CPC_END_OF_LINE_LABEL(name, label) ___CPC_END_OF_LINE(name, label)
+#define CPC_END_OF_LINE(name) ___CPC_END_OF_LINE(name)
+        static inline ___CPC_END_OF_LINE(CPC_END_OF_LINE_)
 
 #endif /* CPARSEC_H_INCLUDED */

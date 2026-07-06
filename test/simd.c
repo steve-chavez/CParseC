@@ -174,7 +174,8 @@ int main(void) {
     {
       PUTS("The take_quoted parser can be labeled...");
 
-      CPC_TAKE_QUOTED_LABEL(p_span_dquoted_l, '"', '"', "expected quoted field")
+      CPC_TAKE_QUOTED(p_span_dquoted_l_, '"', '"')
+      CPC_LABEL(p_span_dquoted_l, p_span_dquoted_l_, "expected quoted field")
 
       CpcResult result = p_span_dquoted_l(cpc_slice_from_cstr("plain"), NULL, NULL);
 

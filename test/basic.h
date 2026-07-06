@@ -49,7 +49,8 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The string parser can be labeled...");
 
-    CPC_STRING_LABEL(p_begin_l, "BEGIN", "this is wrong")
+    CPC_STRING(p_begin_l_, "BEGIN")
+    CPC_LABEL(p_begin_l, p_begin_l_, "this is wrong")
 
     CpcResult result = p_begin_l(cpc_slice_from_cstr("a"), NULL, NULL);
     ASSERT_OUT_NOTHING(result);
@@ -71,7 +72,8 @@ int cpc_basic_test_run(void) {
     PUTS("The one_of parser works...");
 
     CPC_ONE_OF(p_vowel, "aeiou")
-    CPC_ONE_OF_LABEL(p_vowel_l, "aeiou", "expected vowel")
+    CPC_ONE_OF(p_vowel_l_, "aeiou")
+    CPC_LABEL(p_vowel_l, p_vowel_l_, "expected vowel")
 
     CpcResult result = p_vowel(cpc_slice_from_cstr("apple"), NULL, NULL);
 
@@ -237,7 +239,8 @@ int cpc_basic_test_run(void) {
 
     PUTS("The takewhile1 parser can be labeled...");
 
-    CPC_TAKE_WHILE_1_LABEL(p_at_least_1_a_l, is_a, "expected at least one a")
+    CPC_TAKE_WHILE_1(p_at_least_1_a_l_, is_a)
+    CPC_LABEL(p_at_least_1_a_l, p_at_least_1_a_l_, "expected at least one a")
 
     CpcResult result4 = p_at_least_1_a_l(cpc_slice_from_cstr("bba"), NULL, NULL);
 
@@ -309,7 +312,8 @@ int cpc_basic_test_run(void) {
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
     CPC_MANY_1(p_many_1_a, p_a)
-    CPC_MANY_1_LABEL(p_many_1_a_l, p_a, "expected one or more As")
+    CPC_MANY_1(p_many_1_a_l_, p_a)
+    CPC_LABEL(p_many_1_a_l, p_many_1_a_l_, "expected one or more As")
 
     {
       CpcResult result = p_many_1_a(cpc_slice_from_cstr("AAAb"), &arena, NULL);
@@ -495,7 +499,8 @@ int cpc_basic_test_run(void) {
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
     CPC_SEP_BY_1(p_A_sep_by_1_space, p_a, p_is_space)
-    CPC_SEP_BY_1_LABEL(p_A_sep_by_1_space_l, p_a, p_is_space, "expected one or more items")
+    CPC_SEP_BY_1(p_A_sep_by_1_space_l_, p_a, p_is_space)
+    CPC_LABEL(p_A_sep_by_1_space_l, p_A_sep_by_1_space_l_, "expected one or more items")
 
     {
       PUTS("The sepby1 parser succeeds...");
@@ -594,7 +599,8 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The end of line parser can be labeled...");
 
-    CPC_END_OF_LINE_LABEL(p_eol_l, "bad line ending")
+    CPC_END_OF_LINE(p_eol_l_)
+    CPC_LABEL(p_eol_l, p_eol_l_, "bad line ending")
 
     CpcResult result = p_eol_l(cpc_slice_from_cstr("A"), NULL, NULL);
 
@@ -635,7 +641,8 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The eof parser can be labeled...");
 
-    CPC_EOF_LABEL(p_eof_l, "missing eof")
+    CPC_EOF(p_eof_l_)
+    CPC_LABEL(p_eof_l, p_eof_l_, "missing eof")
 
     CpcResult result = p_eof_l(cpc_slice_from_cstr("A"), NULL, NULL);
 
@@ -733,7 +740,8 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The any parser can be labeled...");
 
-    CPC_ANY_LABEL(p_any_l, "expected any char")
+    CPC_ANY(p_any_l_)
+    CPC_LABEL(p_any_l, p_any_l_, "expected any char")
 
     CpcResult result = p_any_l(cpc_slice_from_cstr(""), NULL, NULL);
 
