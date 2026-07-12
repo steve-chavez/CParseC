@@ -47,6 +47,14 @@ int cpc_basic_test_run(void) {
   }
 
   {
+    PUTS("CPC_PARSE runs parsers...");
+
+    CpcResult result = CPC_PARSE(p_begin, cpc_slice_from_cstr("BEGIN leftovers"), NULL);
+    ASSERT_OUT_SLICE_EQ(result, "BEGIN");
+    ASSERT_REST_EQ(result, " leftovers");
+  }
+
+  {
     PUTS("The string parser can be labeled...");
 
     CPC_STRING(p_begin_l_, "BEGIN")

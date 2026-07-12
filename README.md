@@ -31,7 +31,7 @@ CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
 CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
-CPC_LEFT(parse_csv_row, record, lineEnd)
+CPC_LEFT(csvRow, record, lineEnd)
 
 int main(void) {
   CpcArena arena;
@@ -40,7 +40,7 @@ int main(void) {
 
   const char csv[] = "alpha,\"beta\",\"ga,mm,a\",d\"\"elta\n";
   CpcSlice   input = cpc_slice_from_cstr(csv);
-  CpcResult  result = parse_csv_row(input, &arena, NULL);
+  CpcResult  result = CPC_PARSE(csvRow, input, &arena);
 
   for (size_t i = 0; i < result.out.as.list.len; ++i) {
     const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);
@@ -61,6 +61,7 @@ See the [continuous benchmarking on CI](https://github.com/steve-chavez/CParseC/
 ### Basic combinators
 
 All the macros basically generate inlinable functions that take other inlinable functions as parameters. They return `CpcValue`, which can be a slice (`CpcSlice`) or a list (`CpcList`, which requires `CpcArena` for storage).
+Once you define your parsers you can use `CPC_PARSE` to run them.
 
 | Macro | Description | Unnamed |
 | --- | --- | --- |
@@ -86,6 +87,7 @@ All the macros basically generate inlinable functions that take other inlinable 
 | `CPC_ANY(name)` | Consumes and returns any single character as a slice. | `CPC_ANY_` |
 | `CPC_EOF(name)` | Succeeds only at end of input. | `CPC_EOF_` |
 | `CPC_LABEL(name, parser, label)` | Wraps an existing parser and changes its fallback error message. It does not override internal errors like `arena surpassed` or `no progress`. | N/A |
+| `CPC_PARSE(parser, input, arena)` | Runs `parser` using `input` and `arena`. | N/A |
 
 For convenience some parsers can be unnamed to reduce the overhead of naming every function. The ones that are marked with `*` like `CPC_STRING_`,
 need `#define CPC_USE_UNNAMED` since they require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)

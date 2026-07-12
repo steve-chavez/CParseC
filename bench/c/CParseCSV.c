@@ -57,4 +57,4 @@ CPC_LABEL(field, field_, "field")
 CPC_SEP_BY_1(record_, field, CPC_STRING_(","))
 CPC_LABEL(record, record_, "record")
 
-CPC_LEFT(parse_csv_row, record, lineEnd)
+CPC_LEFT(csvRow, record, lineEnd)

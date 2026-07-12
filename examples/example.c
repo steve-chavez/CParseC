@@ -11,7 +11,7 @@ CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
 CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
-CPC_LEFT(parse_csv_row, record, lineEnd)
+CPC_LEFT(csvRow, record, lineEnd)
 
 int main(void) {
   CpcArena arena;
@@ -20,7 +20,7 @@ int main(void) {
 
   const char csv[] = "alpha,\"beta\",\"ga,mm,a\",d\"\"elta\n";
   CpcSlice   input = cpc_slice_from_cstr(csv);
-  CpcResult  result = parse_csv_row(input, &arena, NULL);
+  CpcResult  result = CPC_PARSE(csvRow, input, &arena);
 
   for (size_t i = 0; i < result.out.as.list.len; ++i) {
     const CpcValue *cell = cpc_val_list_at(&arena, &result.out, i);

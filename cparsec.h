@@ -141,6 +141,10 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
   CpcResult name(CpcSlice input, __attribute__((unused)) CpcArena *A,                              \
                  __attribute__((unused)) const char *err)
 
+// Wrapper for running the parser. This is to prevent breaking changes later if the parser
+// signature is changed.
+#define CPC_PARSE(parser, input, arena) (parser)((input), (arena), NULL)
+
 // This is guarded behind a macro because it requires nested functions
 #ifdef CPC_USE_UNNAMED
 #  define CPC_DEFINE_PARSER_(name, body) ({ CPC_DEFINE_PARSER(name) body name; })
