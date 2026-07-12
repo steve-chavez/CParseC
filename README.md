@@ -61,7 +61,6 @@ See the [continuous benchmarking on CI](https://github.com/steve-chavez/CParseC/
 ### Basic combinators
 
 All the macros basically generate inlinable functions that take other inlinable functions as parameters. They return `CpcValue`, which can be a slice (`CpcSlice`) or a list (`CpcList`, which requires `CpcArena` for storage).
-Once you define your parsers you can use `CPC_PARSE` to run them.
 
 | Macro | Description | Unnamed |
 | --- | --- | --- |
@@ -87,7 +86,6 @@ Once you define your parsers you can use `CPC_PARSE` to run them.
 | `CPC_ANY(name)` | Consumes and returns any single character as a slice. | `CPC_ANY_` |
 | `CPC_EOF(name)` | Succeeds only at end of input. | `CPC_EOF_` |
 | `CPC_LABEL(name, parser, label)` | Wraps an existing parser and changes its fallback error message. It does not override internal errors like `arena surpassed` or `no progress`. | N/A |
-| `CPC_PARSE(parser, input, arena)` | Runs `parser` using `input` and `arena`. | N/A |
 
 For convenience some parsers can be unnamed to reduce the overhead of naming every function. The ones that are marked with `*` like `CPC_STRING_`,
 need `#define CPC_USE_UNNAMED` since they require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
@@ -101,6 +99,14 @@ These parsers are specialized versions that make use of `memchr` to be SIMD enab
 | --- | --- | --- |
 | `CPC_TAKE_TILL_ONE_OF(name, stops)` | A combination of `CPC_TAKE_TILL` + `CPC_ONE_OF`. Returns a slice. | N/A |
 | `CPC_TAKE_QUOTED(name, quote, escape)` | Parses a quoted string, handling escaped content. Returns a slice. | N/A |
+
+### Helpers
+
+Once you define your parsers you can use `CPC_PARSE` to run them.
+
+| Macro | Description |
+| --- | --- |
+| `CPC_PARSE(parser, input, arena)` | Runs `parser` using `input` and `arena`. |
 
 ## Haskell Comparison
 
