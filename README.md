@@ -22,7 +22,7 @@ A CSV parser looks like this:
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CPC_USE_MEMCHR
+#define CPC_USE_STRING_H
 #define CPC_USE_UNNAMED
 #include "cparsec.h"
 
@@ -93,7 +93,7 @@ and `__COUNTER__`).
 
 ### SIMD combinators
 
-These parsers are specialized versions that make use of `memchr` to be SIMD enabled. Since `memchr` is not available everywhere, they require `#define CPC_USE_MEMCHR`.
+These parsers are specialized versions that make use of `memchr` to be SIMD enabled [^1]. They require `<string.h>` support, so you have to `#define CPC_USE_STRING_H` to use them.
 
 | Macro | Description | Anonymous |
 | --- | --- | --- |
@@ -128,3 +128,5 @@ All the functions are inspired by Haskell Parsec or AttoParsec. Here's a table w
 | `CPC_APPLY` | `<*>` |
 | `CPC_MAP` | `<$>` |
 | `CPC_PURE` | `pure` |
+
+[^1]: `memchr` is not inherently SIMD. This depends on the implementation provided by the target libc. For example on `glibc` and `BSD libc` it is SIMD enabled but not on `musl`.

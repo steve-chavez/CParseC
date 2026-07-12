@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifdef CPC_USE_MEMCHR
+// TODO Remove CPC_USE_MEMCHR in next major as it's deprecated
+#if defined(CPC_USE_STRING_H) || defined(CPC_USE_MEMCHR)
 #  include <string.h>
 #endif
 
@@ -22,10 +23,18 @@ typedef struct {
 
 // obtain a CpcSlice from a c string
 static inline CpcSlice cpc_slice_from_cstr(const char *s) {
+#if defined(CPC_USE_STRING_H)
+  return (CpcSlice){.ptr = s, .len = strlen(s)};
+// The non string.h implementation of this function is very basic and scans byte by byte instead of
+// word by word. We can optimize this as discussed on
+// https://github.com/steve-chavez/CParseC/issues/3, but for now we leave that to `strlen` for
+// environments that use string.h. glibc `strlen` has various optimizations including SIMD.
+#else
   size_t n = 0;
   while (s[n] != '\0')
     n++;
   return (CpcSlice){.ptr = s, .len = n};
+#endif
 }
 
 // a sub region of the slice
@@ -420,7 +429,7 @@ static inline ___CPC_ANY(CPC_ANY_)
                       cpc_slice_sub(input, i, input.len - i));                                     \
   }
 
-#ifdef CPC_USE_MEMCHR
+#if defined(CPC_USE_STRING_H) || defined(CPC_USE_MEMCHR)
 // combination of CPC_TAKE_TILL + CPC_ONE_OF that is SIMD-friendly thanks
 // to memchr
 #  define CPC_TAKE_TILL_ONE_OF(name, stops)                                                        \

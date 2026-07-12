@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CPC_USE_MEMCHR
+#define CPC_USE_STRING_H
 #define CPC_USE_UNNAMED
 #include "cparsec.h"
 

@@ -1,5 +1,5 @@
 // A more efficient CSV parser than bench/c/CParseCSV.c, using SIMD parsers
-#define CPC_USE_MEMCHR
+#define CPC_USE_STRING_H
 #define CPC_USE_UNNAMED
 #include "csv.h"
 

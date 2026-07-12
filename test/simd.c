@@ -5,7 +5,7 @@
 
 #include "hosted.h"
 
-#define CPC_USE_MEMCHR
+#define CPC_USE_STRING_H
 #include "assertions.h"
 #include "cparsec.h"
 
