@@ -4,8 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// TODO Remove CPC_USE_MEMCHR in next major as it's deprecated
-#if defined(CPC_USE_STRING_H) || defined(CPC_USE_MEMCHR)
+#if defined(CPC_USE_STRING_H)
 #  include <string.h>
 #endif
 
@@ -457,7 +456,7 @@ static inline ___CPC_ANY(CPC_ANY_)
                       cpc_slice_sub(input, i, input.len - i));                                     \
   }
 
-#if defined(CPC_USE_STRING_H) || defined(CPC_USE_MEMCHR)
+#if defined(CPC_USE_STRING_H)
 // combination of CPC_TAKE_TILL + CPC_ONE_OF that is SIMD-friendly thanks
 // to memchr
 #  define CPC_TAKE_TILL_ONE_OF(name, stops)                                                        \
