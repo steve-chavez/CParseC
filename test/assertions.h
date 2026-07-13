@@ -12,7 +12,21 @@
   ASSERT(cpc_is_nothing(&(result).out));                                                           \
   ASSERT((result).out.as.slice.len == 0)
 
-#define ASSERT_ERR_EQ(result, expected) ASSERT(STRCMP((result).err, (expected)) == 0)
+#define ASSERT_OUT_ARENA_FULL(result)                                                              \
+  ASSERT(!(result).ok);                                                                            \
+  ASSERT(cpc_is_nothing(&(result).out));                                                           \
+  ASSERT((result).err.kind == CPC_ERR_ARENA_FULL);                                                 \
+  ASSERT((result).err.msg == NULL)
+
+#define ASSERT_OUT_NO_PROGRESS(result)                                                             \
+  ASSERT(!(result).ok);                                                                            \
+  ASSERT(cpc_is_nothing(&(result).out));                                                           \
+  ASSERT((result).err.kind == CPC_ERR_NO_PROGRESS);                                                \
+  ASSERT((result).err.msg == NULL)
+
+#define ASSERT_ERR_EQ(result, expected)                                                            \
+  ASSERT((result).err.kind == CPC_ERR_PARSE);                                                      \
+  ASSERT(STRCMP((result).err.msg, (expected)) == 0)
 
 #define ASSERT_REST_EQ(result, expected)                                                           \
   ASSERT((result).rest.len == sizeof(expected) - 1);                                               \

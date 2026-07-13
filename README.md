@@ -85,7 +85,7 @@ All the macros basically generate inlinable functions that take other inlinable 
 | `CPC_END_OF_LINE(name)` | Parses `\\n` or `\\r\\n` and returns the matched slice. | `CPC_END_OF_LINE_` |
 | `CPC_ANY(name)` | Consumes and returns any single character as a slice. | `CPC_ANY_` |
 | `CPC_EOF(name)` | Succeeds only at end of input. | `CPC_EOF_` |
-| `CPC_LABEL(name, parser, label)` | Wraps an existing parser and changes its fallback error message. It does not override internal errors like `arena surpassed` or `no progress`. | N/A |
+| `CPC_LABEL(name, parser, label)` | Wraps an existing parser and changes its fallback parse error message. | N/A |
 
 For convenience some parsers can be unnamed to reduce the overhead of naming every function. The ones that are marked with `*` like `CPC_STRING_`,
 need `#define CPC_USE_UNNAMED` since they require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html)
@@ -113,7 +113,7 @@ Once you define your parsers you can use `CPC_PARSE` to run them.
 ### Differences with Haskell
 
 - Do or do not, there is no `try`. Unlike Haskell's Parsec we don't need a `try` since it's cheap to backtrack due to working with slices. Parsers like `CPC_STRING` do not consume input if they fail.
-- CParseC parsers always terminate. Unlike `many`, `manyTill`, `sepby`, `sepby1` which can infinite loop in Haskell. If for example you do a combination of `CPC_TAKE_WHILE` with `CPC_MANY`, you'll get an error of `no progress` instead of an infinite loop.
+- CParseC parsers always terminate. Unlike `many`, `manyTill`, `sepby`, `sepby1` which can infinite loop in Haskell. If for example you do a combination of `CPC_TAKE_WHILE` with `CPC_MANY`, you'll get `CPC_ERR_NO_PROGRESS` error instead of an infinite loop.
 - There's no equivalent for `>>` as this can be already expressed with `*>`, which is `CPC_RIGHT`.
 
 ### Similarities with Haskell

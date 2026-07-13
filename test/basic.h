@@ -298,7 +298,7 @@ int cpc_basic_test_run(void) {
 
       CpcResult result = p_inf_many(cpc_slice_from_cstr("anything"), &arena, NULL);
 
-      ASSERT_ERR_EQ(result, "no progress");
+      ASSERT_OUT_NO_PROGRESS(result);
     }
 
     PUTS("The many parser will fail if the arena doesn't have enough "
@@ -308,7 +308,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_a(cpc_slice_from_cstr("AAAAAAAAAAAAA"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "arena surpassed");
+      ASSERT_OUT_ARENA_FULL(result);
     }
   }
 
@@ -353,7 +353,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_1_a(cpc_slice_from_cstr("AAAAAAAAAAAAAA"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "arena surpassed");
+      ASSERT_OUT_ARENA_FULL(result);
     }
 
     {
@@ -405,7 +405,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_inf_many_till(cpc_slice_from_cstr("abc"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "no progress");
+      ASSERT_OUT_NO_PROGRESS(result);
     }
 
     {
@@ -415,7 +415,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_many_a_till_semicol(cpc_slice_from_cstr("AAAAAAAAAAA;"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "arena surpassed");
+      ASSERT_OUT_ARENA_FULL(result);
     }
   }
 
@@ -484,7 +484,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_A_sep_by_space(cpc_slice_from_cstr("A A A A A A A A"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "arena surpassed");
+      ASSERT_OUT_ARENA_FULL(result);
     }
 
     {
@@ -497,7 +497,7 @@ int cpc_basic_test_run(void) {
       CpcResult result = p_inf_sep_by(cpc_slice_from_cstr("abc"), &arena, NULL);
 
       ASSERT(!result.ok);
-      ASSERT_ERR_EQ(result, "no progress");
+      ASSERT_OUT_NO_PROGRESS(result);
     }
   }
 
@@ -552,7 +552,7 @@ int cpc_basic_test_run(void) {
 
       CpcResult result = p_inf_sep_by_1(cpc_slice_from_cstr(","), &arena, NULL);
 
-      ASSERT_ERR_EQ(result, "no progress");
+      ASSERT_OUT_NO_PROGRESS(result);
     }
 
     {

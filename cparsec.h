@@ -73,22 +73,44 @@ static inline void cpc_arena_reset(CpcArena *a) {
   a->offset = 0;
 }
 
+typedef enum {
+  CPC_ERR_NONE,
+  CPC_ERR_PARSE,
+  CPC_ERR_ARENA_FULL,
+  CPC_ERR_NO_PROGRESS,
+} CpcErrKind;
+
+typedef struct {
+  CpcErrKind  kind;
+  const char *msg;
+} CpcErr;
+
 // returns the accepted output value and the rest of the string as another slice
 typedef struct {
-  bool        ok;
-  CpcValue    out;
-  CpcSlice    rest;
-  const char *err;
+  bool     ok;
+  CpcValue out;
+  CpcSlice rest;
+  CpcErr   err;
 } CpcResult;
 
 static inline CpcResult cpc_res_ok(CpcValue out, CpcSlice rest) {
-  return (CpcResult){.out = out, .rest = rest, .ok = true};
+  return (CpcResult){
+    .out = out, .rest = rest, .ok = true, .err = {.kind = CPC_ERR_NONE, .msg = NULL}};
 }
 
 // Allows to specify a default error message with an overriding label
 static inline CpcResult cpc_res_err(CpcSlice rest, const char *def, const char *label) {
-  return (CpcResult){
-    .out = (CpcValue){.kind = CPC_NOTHING}, .rest = rest, .ok = false, .err = label ? label : def};
+  return (CpcResult){.out  = (CpcValue){.kind = CPC_NOTHING},
+                     .rest = rest,
+                     .ok   = false,
+                     .err  = {.kind = CPC_ERR_PARSE, .msg = label ? label : def}};
+}
+
+static inline CpcResult cpc_res_internal_err(CpcSlice rest, CpcErrKind kind) {
+  return (CpcResult){.out  = (CpcValue){.kind = CPC_NOTHING},
+                     .rest = rest,
+                     .ok   = false,
+                     .err  = {.kind = kind, .msg = NULL}};
 }
 
 static inline CpcValue cpc_val_slice(CpcSlice s) {
@@ -257,9 +279,11 @@ static inline ___CPC_ANY(CPC_ANY_)
                                                                                                    \
     CpcValue out = cpc_val_list(A);                                                                \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r1.out)) return cpc_res_err(r1.rest, "arena surpassed", NULL); \
+    if (!cpc_val_list_push(A, &out, r1.out))                                                       \
+      return cpc_res_internal_err(r1.rest, CPC_ERR_ARENA_FULL);                                    \
                                                                                                    \
-    if (!cpc_val_list_push(A, &out, r2.out)) return cpc_res_err(r2.rest, "arena surpassed", NULL); \
+    if (!cpc_val_list_push(A, &out, r2.out))                                                       \
+      return cpc_res_internal_err(r2.rest, CPC_ERR_ARENA_FULL);                                    \
                                                                                                    \
     return cpc_res_ok(out, r2.rest);                                                               \
   }
@@ -306,8 +330,10 @@ static inline ___CPC_ANY(CPC_ANY_)
       if (!r.ok) {                                                                                 \
         break;                                                                                     \
       }                                                                                            \
-      if (cpc_no_progress_made(r.rest, cur)) return cpc_res_err(input, "no progress", NULL);       \
-      if (!cpc_val_list_push(A, &out, r.out)) return cpc_res_err(input, "arena surpassed", NULL);  \
+      if (cpc_no_progress_made(r.rest, cur))                                                       \
+        return cpc_res_internal_err(input, CPC_ERR_NO_PROGRESS);                                   \
+      if (!cpc_val_list_push(A, &out, r.out))                                                      \
+        return cpc_res_internal_err(input, CPC_ERR_ARENA_FULL);                                    \
       cur = r.rest;                                                                                \
       count++;                                                                                     \
     }                                                                                              \
@@ -336,9 +362,10 @@ static inline ___CPC_ANY(CPC_ANY_)
       CpcResult ritem = (item)(cur, A, err);                                                       \
       if (!ritem.ok) return ritem;                                                                 \
                                                                                                    \
-      if (cpc_no_progress_made(ritem.rest, cur)) return cpc_res_err(input, "no progress", NULL);   \
+      if (cpc_no_progress_made(ritem.rest, cur))                                                   \
+        return cpc_res_internal_err(input, CPC_ERR_NO_PROGRESS);                                   \
       if (!cpc_val_list_push(A, &out, ritem.out))                                                  \
-        return cpc_res_err(input, "arena surpassed", NULL);                                        \
+        return cpc_res_internal_err(input, CPC_ERR_ARENA_FULL);                                    \
                                                                                                    \
       cur = ritem.rest;                                                                            \
     }                                                                                              \
@@ -354,7 +381,7 @@ static inline ___CPC_ANY(CPC_ANY_)
     }                                                                                              \
                                                                                                    \
     if (!cpc_val_list_push(A, &out, first.out))                                                    \
-      return cpc_res_err(input, "arena surpassed", NULL);                                          \
+      return cpc_res_internal_err(input, CPC_ERR_ARENA_FULL);                                      \
                                                                                                    \
     cur = first.rest;                                                                              \
     /* this loop will always terminate, see below conditions */                                    \
@@ -370,10 +397,11 @@ static inline ___CPC_ANY(CPC_ANY_)
       }                                                                                            \
                                                                                                    \
       if (!cpc_val_list_push(A, &out, next.out))                                                   \
-        return cpc_res_err(input, "arena surpassed", NULL);                                        \
+        return cpc_res_internal_err(input, CPC_ERR_ARENA_FULL);                                    \
                                                                                                    \
       cur = next.rest;                                                                             \
-      if (cpc_no_progress_made(cur, before_sep)) return cpc_res_err(input, "no progress", NULL);   \
+      if (cpc_no_progress_made(cur, before_sep))                                                   \
+        return cpc_res_internal_err(input, CPC_ERR_NO_PROGRESS);                                   \
     }                                                                                              \
     return cpc_res_ok(out, cur);                                                                   \
   }
