@@ -2,6 +2,6 @@
 #define CSV_H
 #include "cparsec.h"
 
-extern CpcResult csvRow(CpcSlice input, CpcArena *A, const char *err);
+extern CPC_DEFINE_PARSER(csvRow);
 
 #endif /* CSV_H */
