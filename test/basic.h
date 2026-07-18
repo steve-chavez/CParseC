@@ -23,7 +23,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The string parser succeeds...");
 
-    CpcResult result = p_begin(cpc_slice_from_cstr("BEGIN leftovers"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_begin, cpc_slice_from_cstr("BEGIN leftovers"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "BEGIN");
     ASSERT_REST_EQ(result, " leftovers");
   }
@@ -31,7 +31,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The string parser fails if there's a mismatch...");
 
-    CpcResult result = p_begin(cpc_slice_from_cstr("unknown leftovers"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_begin, cpc_slice_from_cstr("unknown leftovers"), NULL);
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "unknown leftovers");
     ASSERT_ERR_EQ(result, "mismatch");
@@ -40,7 +40,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The string parser fails if the input is too short...");
 
-    CpcResult result = p_begin(cpc_slice_from_cstr("a"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_begin, cpc_slice_from_cstr("a"), NULL);
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "a");
     ASSERT_ERR_EQ(result, "mismatch");
@@ -60,7 +60,7 @@ int cpc_basic_test_run(void) {
     CPC_STRING(p_begin_l_, "BEGIN")
     CPC_LABEL(p_begin_l, p_begin_l_, "this is wrong")
 
-    CpcResult result = p_begin_l(cpc_slice_from_cstr("a"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_begin_l, cpc_slice_from_cstr("a"), NULL);
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "a");
     ASSERT_ERR_EQ(result, "this is wrong");
@@ -73,17 +73,17 @@ int cpc_basic_test_run(void) {
     CPC_ONE_OF(p_vowel_l_, "aeiou")
     CPC_LABEL(p_vowel_l, p_vowel_l_, "expected vowel")
 
-    CpcResult result = p_vowel(cpc_slice_from_cstr("apple"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_vowel, cpc_slice_from_cstr("apple"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "a");
     ASSERT_REST_EQ(result, "pple");
 
-    CpcResult result2 = p_vowel(cpc_slice_from_cstr("banana"), NULL, NULL);
+    CpcResult result2 = CPC_PARSE(p_vowel, cpc_slice_from_cstr("banana"), NULL);
 
     ASSERT(!result2.ok);
     ASSERT_ERR_EQ(result2, "none matched");
 
-    CpcResult result3 = p_vowel_l(cpc_slice_from_cstr("banana"), NULL, NULL);
+    CpcResult result3 = CPC_PARSE(p_vowel_l, cpc_slice_from_cstr("banana"), NULL);
 
     ASSERT(!result3.ok);
     ASSERT_ERR_EQ(result3, "expected vowel");
@@ -95,7 +95,7 @@ int cpc_basic_test_run(void) {
     CPC_STRING(p_end, "END")
     CPC_ALT(p_combined, p_begin, p_end)
 
-    CpcResult result = p_combined(cpc_slice_from_cstr("END leftovers"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_combined, cpc_slice_from_cstr("END leftovers"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "END");
     ASSERT_REST_EQ(result, " leftovers");
   }
@@ -108,7 +108,7 @@ int cpc_basic_test_run(void) {
     CPC_ALT(p_combined_wrap_l, p_begin_wrap_l, p_end_wrap_l)
     CPC_LABEL(p_combined_wrap_labeled, p_combined_wrap_l, "expected begin or end")
 
-    CpcResult result = p_combined_wrap_labeled(cpc_slice_from_cstr("other"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_combined_wrap_labeled, cpc_slice_from_cstr("other"), NULL);
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "other");
     ASSERT_ERR_EQ(result, "expected begin or end");
@@ -121,7 +121,7 @@ int cpc_basic_test_run(void) {
     CPC_STRING(p_num, "12345")
     CPC_RIGHT(p_valnum, p_val, p_num)
 
-    CpcResult result = p_valnum(cpc_slice_from_cstr("value=12345"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_valnum, cpc_slice_from_cstr("value=12345"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "12345");
     ASSERT_REST_EMPTY(result);
   }
@@ -132,7 +132,7 @@ int cpc_basic_test_run(void) {
     CPC_STRING(p_sel, "select 1")
     CPC_LEFT(p_stmt, p_sel, p_semicol)
 
-    CpcResult result = p_stmt(cpc_slice_from_cstr("select 1;"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_stmt, cpc_slice_from_cstr("select 1;"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "select 1");
     ASSERT_REST_EMPTY(result);
   }
@@ -145,7 +145,7 @@ int cpc_basic_test_run(void) {
     CPC_STRING(p_abc, "abc")
     CPC_BETWEEN(p_paren_abc, p_lparen, p_abc, p_rparen)
 
-    CpcResult result = p_paren_abc(cpc_slice_from_cstr("(abc)rest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_paren_abc, cpc_slice_from_cstr("(abc)rest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "abc");
     ASSERT_REST_EQ(result, "rest");
@@ -174,7 +174,7 @@ int cpc_basic_test_run(void) {
     CPC_APPLY(p_ab, p_a, p_b);
     CPC_MAP(p_mapped_ab, p_ab, to_pair);
 
-    CpcResult result = p_mapped_ab(cpc_slice_from_cstr("AB"), &arena, NULL);
+    CpcResult result = CPC_PARSE(p_mapped_ab, cpc_slice_from_cstr("AB"), &arena);
 
     ASSERT(result.ok);
     ASSERT(pair.x == 'A');
@@ -187,14 +187,14 @@ int cpc_basic_test_run(void) {
 
     CPC_TAKE_WHILE(p_only_a, is_a)
 
-    CpcResult result = p_only_a(cpc_slice_from_cstr("aaaaaaaaaabbbbb"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_only_a, cpc_slice_from_cstr("aaaaaaaaaabbbbb"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "aaaaaaaaaa");
     ASSERT_REST_EQ(result, "bbbbb");
 
     PUTS("The takewhile parser never fails...");
 
-    CpcResult result2 = p_only_a(cpc_slice_from_cstr("aabbbbbaaaa"), NULL, NULL);
+    CpcResult result2 = CPC_PARSE(p_only_a, cpc_slice_from_cstr("aabbbbbaaaa"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result2, "aa");
     ASSERT_REST_EQ(result2, "bbbbbaaaa");
@@ -203,7 +203,7 @@ int cpc_basic_test_run(void) {
          "pred returns false at "
          "first char...");
 
-    CpcResult result1 = p_only_a(cpc_slice_from_cstr("bbbbbaaaa"), NULL, NULL);
+    CpcResult result1 = CPC_PARSE(p_only_a, cpc_slice_from_cstr("bbbbbaaaa"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result1, "");
     ASSERT_REST_EQ(result1, "bbbbbaaaa");
@@ -214,14 +214,14 @@ int cpc_basic_test_run(void) {
 
     CPC_TAKE_WHILE_1(p_at_least_1_a, is_a)
 
-    CpcResult result = p_at_least_1_a(cpc_slice_from_cstr("abb"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_at_least_1_a, cpc_slice_from_cstr("abb"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "a");
     ASSERT_REST_EQ(result, "bb");
 
     PUTS("The takewhile1 parser does fail...");
 
-    CpcResult result2 = p_at_least_1_a(cpc_slice_from_cstr("bba"), NULL, NULL);
+    CpcResult result2 = CPC_PARSE(p_at_least_1_a, cpc_slice_from_cstr("bba"), NULL);
 
     ASSERT_OUT_NOTHING(result2);
     ASSERT_ERR_EQ(result2, "too few");
@@ -229,7 +229,7 @@ int cpc_basic_test_run(void) {
 
     PUTS("The takewhile1 parser fails on empty input...");
 
-    CpcResult result3 = p_at_least_1_a(cpc_slice_from_cstr(""), NULL, NULL);
+    CpcResult result3 = CPC_PARSE(p_at_least_1_a, cpc_slice_from_cstr(""), NULL);
 
     ASSERT_OUT_NOTHING(result3);
     ASSERT_ERR_EQ(result3, "too few");
@@ -240,7 +240,7 @@ int cpc_basic_test_run(void) {
     CPC_TAKE_WHILE_1(p_at_least_1_a_l_, is_a)
     CPC_LABEL(p_at_least_1_a_l, p_at_least_1_a_l_, "expected at least one a")
 
-    CpcResult result4 = p_at_least_1_a_l(cpc_slice_from_cstr("bba"), NULL, NULL);
+    CpcResult result4 = CPC_PARSE(p_at_least_1_a_l, cpc_slice_from_cstr("bba"), NULL);
 
     ASSERT(!result4.ok);
     ASSERT_ERR_EQ(result4, "expected at least one a");
@@ -256,7 +256,7 @@ int cpc_basic_test_run(void) {
     CPC_MANY(p_many_a, p_a)
 
     {
-      CpcResult result = p_many_a(cpc_slice_from_cstr("AAAAb"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_a, cpc_slice_from_cstr("AAAAb"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -271,7 +271,7 @@ int cpc_basic_test_run(void) {
     PUTS("The many parser doesn't fail if it doesn't consume any input...");
 
     {
-      CpcResult result = p_many_a(cpc_slice_from_cstr("aaaab"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_a, cpc_slice_from_cstr("aaaab"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -286,7 +286,7 @@ int cpc_basic_test_run(void) {
 
       cpc_arena_reset(&arena);
 
-      CpcResult result = p_inf_many(cpc_slice_from_cstr("anything"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_inf_many, cpc_slice_from_cstr("anything"), &arena);
 
       ASSERT_OUT_NO_PROGRESS(result);
     }
@@ -295,7 +295,7 @@ int cpc_basic_test_run(void) {
          "capacity...");
 
     {
-      CpcResult result = p_many_a(cpc_slice_from_cstr("AAAAAAAAAAAAA"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_a, cpc_slice_from_cstr("AAAAAAAAAAAAA"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_ARENA_FULL(result);
@@ -314,7 +314,7 @@ int cpc_basic_test_run(void) {
     CPC_LABEL(p_many_1_a_l, p_many_1_a_l_, "expected one or more As")
 
     {
-      CpcResult result = p_many_1_a(cpc_slice_from_cstr("AAAb"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_1_a, cpc_slice_from_cstr("AAAb"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -329,7 +329,7 @@ int cpc_basic_test_run(void) {
     PUTS("The many1 parser fails...");
 
     {
-      CpcResult result = p_many_1_a(cpc_slice_from_cstr("bAAAAb"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_1_a, cpc_slice_from_cstr("bAAAAb"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_REST_EQ(result, "bAAAAb");
@@ -340,7 +340,7 @@ int cpc_basic_test_run(void) {
          "capacity...");
 
     {
-      CpcResult result = p_many_1_a(cpc_slice_from_cstr("AAAAAAAAAAAAAA"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_1_a, cpc_slice_from_cstr("AAAAAAAAAAAAAA"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_ARENA_FULL(result);
@@ -349,7 +349,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The many1 parser can be labeled...");
 
-      CpcResult result = p_many_1_a_l(cpc_slice_from_cstr("bAAAAb"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_1_a_l, cpc_slice_from_cstr("bAAAAb"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_ERR_EQ(result, "expected one or more As");
@@ -366,7 +366,8 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The manytill parser succeeds...");
 
-      CpcResult result = p_many_a_till_semicol(cpc_slice_from_cstr("AAAAAAAAA;"), &arena, NULL);
+      CpcResult result =
+          CPC_PARSE(p_many_a_till_semicol, cpc_slice_from_cstr("AAAAAAAAA;"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -381,7 +382,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The manytill parser fails...");
 
-      CpcResult result = p_many_a_till_semicol(cpc_slice_from_cstr("bb"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_many_a_till_semicol, cpc_slice_from_cstr("bb"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_REST_EQ(result, "bb");
@@ -392,7 +393,7 @@ int cpc_basic_test_run(void) {
 
       CPC_MANY_TILL(p_inf_many_till, p_is_space, p_b)
 
-      CpcResult result = p_inf_many_till(cpc_slice_from_cstr("abc"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_inf_many_till, cpc_slice_from_cstr("abc"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_NO_PROGRESS(result);
@@ -402,7 +403,8 @@ int cpc_basic_test_run(void) {
       PUTS("The manytill parser will fail if the arena doesn't have enough "
            "capacity...");
 
-      CpcResult result = p_many_a_till_semicol(cpc_slice_from_cstr("AAAAAAAAAAA;"), &arena, NULL);
+      CpcResult result =
+          CPC_PARSE(p_many_a_till_semicol, cpc_slice_from_cstr("AAAAAAAAAAA;"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_ARENA_FULL(result);
@@ -414,21 +416,21 @@ int cpc_basic_test_run(void) {
 
     CPC_TAKE_TILL(p_till_b, is_a)
 
-    CpcResult result = p_till_b(cpc_slice_from_cstr("bbbbaaaa"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_till_b, cpc_slice_from_cstr("bbbbaaaa"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "bbbb");
     ASSERT_REST_EQ(result, "aaaa");
 
     PUTS("The taketill parser returns empty when the predicate matches at the first char...");
 
-    CpcResult result2 = p_till_b(cpc_slice_from_cstr("aaaa"), NULL, NULL);
+    CpcResult result2 = CPC_PARSE(p_till_b, cpc_slice_from_cstr("aaaa"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result2, "");
     ASSERT_REST_EQ(result2, "aaaa");
 
     PUTS("The taketill parser consumes the whole input when it hits eof...");
 
-    CpcResult result3 = p_till_b(cpc_slice_from_cstr("bbbb"), NULL, NULL);
+    CpcResult result3 = CPC_PARSE(p_till_b, cpc_slice_from_cstr("bbbb"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result3, "bbbb");
     ASSERT_REST_EMPTY(result3);
@@ -444,7 +446,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby parser succeeds...");
 
-      CpcResult result = p_A_sep_by_space(cpc_slice_from_cstr("A A A A B"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_A_sep_by_space, cpc_slice_from_cstr("A A A A B"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -459,7 +461,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby parser doesn't fail if it doesn't consume any input...");
 
-      CpcResult result = p_A_sep_by_space(cpc_slice_from_cstr("B B B"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_A_sep_by_space, cpc_slice_from_cstr("B B B"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -471,7 +473,8 @@ int cpc_basic_test_run(void) {
       PUTS("The sepby parser will fail if the arena doesn't have enough "
            "capacity...");
 
-      CpcResult result = p_A_sep_by_space(cpc_slice_from_cstr("A A A A A A A A"), &arena, NULL);
+      CpcResult result =
+          CPC_PARSE(p_A_sep_by_space, cpc_slice_from_cstr("A A A A A A A A"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_ARENA_FULL(result);
@@ -484,7 +487,7 @@ int cpc_basic_test_run(void) {
 
       cpc_arena_reset(&arena);
 
-      CpcResult result = p_inf_sep_by(cpc_slice_from_cstr("abc"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_inf_sep_by, cpc_slice_from_cstr("abc"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_OUT_NO_PROGRESS(result);
@@ -503,7 +506,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby1 parser succeeds...");
 
-      CpcResult result = p_A_sep_by_1_space(cpc_slice_from_cstr("A A A A B"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_A_sep_by_1_space, cpc_slice_from_cstr("A A A A B"), &arena);
 
       ASSERT(result.ok);
       ASSERT(cpc_is_list(&result.out));
@@ -518,7 +521,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby1 parser fails...");
 
-      CpcResult result = p_A_sep_by_1_space(cpc_slice_from_cstr("B A A"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_A_sep_by_1_space, cpc_slice_from_cstr("B A A"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_REST_EQ(result, "B A A");
@@ -540,7 +543,7 @@ int cpc_basic_test_run(void) {
 
       CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_comma, p_take_while_not_comma)
 
-      CpcResult result = p_inf_sep_by_1(cpc_slice_from_cstr(","), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_inf_sep_by_1, cpc_slice_from_cstr(","), &arena);
 
       ASSERT_OUT_NO_PROGRESS(result);
     }
@@ -548,7 +551,7 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby1 parser can be labeled...");
 
-      CpcResult result = p_A_sep_by_1_space_l(cpc_slice_from_cstr("B A A"), &arena, NULL);
+      CpcResult result = CPC_PARSE(p_A_sep_by_1_space_l, cpc_slice_from_cstr("B A A"), &arena);
 
       ASSERT(!result.ok);
       ASSERT_ERR_EQ(result, "expected one or more items");
@@ -558,7 +561,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The end of line parser succeeds on CRLF...");
 
-    CpcResult result = CPC_END_OF_LINE_(cpc_slice_from_cstr("\r\nrest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_END_OF_LINE_, cpc_slice_from_cstr("\r\nrest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "\r\n");
     ASSERT_REST_EQ(result, "rest");
@@ -567,7 +570,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The end of line parser succeeds on LF...");
 
-    CpcResult result = CPC_END_OF_LINE_(cpc_slice_from_cstr("\nrest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_END_OF_LINE_, cpc_slice_from_cstr("\nrest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "\n");
     ASSERT_REST_EQ(result, "rest");
@@ -576,7 +579,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The end of line parser fails on non-newline input...");
 
-    CpcResult result = CPC_END_OF_LINE_(cpc_slice_from_cstr("A"), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_END_OF_LINE_, cpc_slice_from_cstr("A"), NULL);
 
     ASSERT(!result.ok);
     ASSERT_REST_EQ(result, "A");
@@ -588,7 +591,7 @@ int cpc_basic_test_run(void) {
 
     CPC_END_OF_LINE(p_eol)
 
-    CpcResult result = p_eol(cpc_slice_from_cstr("\nrest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_eol, cpc_slice_from_cstr("\nrest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "\n");
     ASSERT_REST_EQ(result, "rest");
@@ -600,7 +603,7 @@ int cpc_basic_test_run(void) {
     CPC_END_OF_LINE(p_eol_l_)
     CPC_LABEL(p_eol_l, p_eol_l_, "bad line ending")
 
-    CpcResult result = p_eol_l(cpc_slice_from_cstr("A"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_eol_l, cpc_slice_from_cstr("A"), NULL);
 
     ASSERT(!result.ok);
     ASSERT_ERR_EQ(result, "bad line ending");
@@ -609,7 +612,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The eof parser succeeds...");
 
-    CpcResult result = CPC_EOF_(cpc_slice_from_cstr(""), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_EOF_, cpc_slice_from_cstr(""), NULL);
 
     ASSERT(result.ok);
     ASSERT_REST_EMPTY(result);
@@ -618,7 +621,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The eof parser fails...");
 
-    CpcResult result = CPC_EOF_(cpc_slice_from_cstr("A"), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_EOF_, cpc_slice_from_cstr("A"), NULL);
 
     ASSERT(!result.ok);
     ASSERT_REST_EQ(result, "A");
@@ -630,7 +633,7 @@ int cpc_basic_test_run(void) {
 
     CPC_EOF(p_eof)
 
-    CpcResult result = p_eof(cpc_slice_from_cstr(""), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_eof, cpc_slice_from_cstr(""), NULL);
 
     ASSERT(result.ok);
     ASSERT_REST_EMPTY(result);
@@ -642,7 +645,7 @@ int cpc_basic_test_run(void) {
     CPC_EOF(p_eof_l_)
     CPC_LABEL(p_eof_l, p_eof_l_, "missing eof")
 
-    CpcResult result = p_eof_l(cpc_slice_from_cstr("A"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_eof_l, cpc_slice_from_cstr("A"), NULL);
 
     ASSERT(!result.ok);
     ASSERT_ERR_EQ(result, "missing eof");
@@ -658,7 +661,7 @@ int cpc_basic_test_run(void) {
       CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
       CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
 
-      CpcResult result = p_dquote(cpc_slice_from_cstr("\"\"abc"), NULL, NULL);
+      CpcResult result = CPC_PARSE(p_dquote, cpc_slice_from_cstr("\"\"abc"), NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "\"");
       ASSERT_REST_EQ(result, "abc");
@@ -672,12 +675,12 @@ int cpc_basic_test_run(void) {
     CPC_LEFT(p_token_semicol, p_token, p_semicol)
     CPC_MATCH(p_match_token_semicol, p_token_semicol)
 
-    CpcResult plain = p_token_semicol(cpc_slice_from_cstr("token;rest"), NULL, NULL);
+    CpcResult plain = CPC_PARSE(p_token_semicol, cpc_slice_from_cstr("token;rest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(plain, "token");
     ASSERT_REST_EQ(plain, "rest");
 
-    CpcResult result = p_match_token_semicol(cpc_slice_from_cstr("token;rest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_match_token_semicol, cpc_slice_from_cstr("token;rest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "token;");
     ASSERT_REST_EQ(result, "rest");
@@ -693,13 +696,13 @@ int cpc_basic_test_run(void) {
     CPC_APPLY(p_ab_for_match, p_a, p_b)
     CPC_MATCH(p_match_ab, p_ab_for_match)
 
-    CpcResult result1 = p_match_ab(cpc_slice_from_cstr("ABrest"), &arena, NULL);
+    CpcResult result1 = CPC_PARSE(p_match_ab, cpc_slice_from_cstr("ABrest"), &arena);
 
     ASSERT_OUT_SLICE_EQ(result1, "AB");
     ASSERT_REST_EQ(result1, "rest");
     ASSERT(arena.offset == 0);
 
-    CpcResult result2 = p_match_ab(cpc_slice_from_cstr("ABrest"), &arena, NULL);
+    CpcResult result2 = CPC_PARSE(p_match_ab, cpc_slice_from_cstr("ABrest"), &arena);
 
     ASSERT_OUT_SLICE_EQ(result2, "AB");
     ASSERT(arena.offset == 0);
@@ -708,7 +711,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The any parser succeeds...");
 
-    CpcResult result = CPC_ANY_(cpc_slice_from_cstr("Arest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_ANY_, cpc_slice_from_cstr("Arest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "A");
     ASSERT_REST_EQ(result, "rest");
@@ -717,7 +720,7 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The any parser fails on eof...");
 
-    CpcResult result = CPC_ANY_(cpc_slice_from_cstr(""), NULL, NULL);
+    CpcResult result = CPC_PARSE(CPC_ANY_, cpc_slice_from_cstr(""), NULL);
 
     ASSERT(!result.ok);
     ASSERT_REST_EMPTY(result);
@@ -729,7 +732,7 @@ int cpc_basic_test_run(void) {
 
     CPC_ANY(p_any)
 
-    CpcResult result = p_any(cpc_slice_from_cstr("Brest"), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_any, cpc_slice_from_cstr("Brest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "B");
     ASSERT_REST_EQ(result, "rest");
@@ -741,7 +744,7 @@ int cpc_basic_test_run(void) {
     CPC_ANY(p_any_l_)
     CPC_LABEL(p_any_l, p_any_l_, "expected any char")
 
-    CpcResult result = p_any_l(cpc_slice_from_cstr(""), NULL, NULL);
+    CpcResult result = CPC_PARSE(p_any_l, cpc_slice_from_cstr(""), NULL);
 
     ASSERT(!result.ok);
     ASSERT_REST_EMPTY(result);
