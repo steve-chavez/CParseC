@@ -172,7 +172,17 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
                  __attribute__((unused)) const char *err)
 
 // Wrapper for running the parser.
-#define CPC_PARSE(parser, input, arena) (parser)((input), (arena), NULL)
+// CPC_PARSE(...) is a variadic macro dispatcher
+// - CPC_PARSE(parser, input, arena) expands to CPC_PARSE3(...)
+// - CPC_PARSE(parser, input, arena, err) expands to CPC_PARSE4(...)
+// CPC_PARSE_GET appends the implementation names after the
+// arguments and then picks the NAME slot, so 3 args selects CPC_PARSE3 and 4 args selects
+// CPC_PARSE4. This follows the idea on
+// https://gustedt.wordpress.com/2010/06/03/default-arguments-for-c99/
+#define CPC_PARSE3(parser, input, arena) (parser)((input), (arena), NULL)
+#define CPC_PARSE4(parser, input, arena, err) (parser)((input), (arena), (err))
+#define CPC_PARSE_GET(_1, _2, _3, _4, NAME, ...) NAME
+#define CPC_PARSE(...) CPC_PARSE_GET(__VA_ARGS__, CPC_PARSE4, CPC_PARSE3)(__VA_ARGS__)
 
 // This is guarded behind a macro because it requires nested functions
 #ifdef CPC_USE_UNNAMED
@@ -231,35 +241,35 @@ static inline ___CPC_ANY(CPC_ANY_)
 // `alt` for "alternative" is the equivalent of Parsec `<|>`
 #define CPC_ALT(name, x, y)                                                                        \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult res = (x)(input, A, err);                                                            \
+    CpcResult res = CPC_PARSE(x, input, A, err);                                                   \
     if (res.ok)                                                                                    \
       return res;                                                                                  \
     else                                                                                           \
-      return (y)(input, A, err);                                                                   \
+      return CPC_PARSE(y, input, A, err);                                                          \
   }
 
 #define CPC_LABEL(name, parser, label)                                                             \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    return (parser)(input, A, err ? err : (label));                                                \
+    return CPC_PARSE(parser, input, A, err ? err : (label));                                       \
   }
 
 // `right` is the equivalent of Haskell's Applicative right sequencing `*>`
 #define CPC_RIGHT(name, x, y)                                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult res = (x)(input, A, err);                                                            \
+    CpcResult res = CPC_PARSE(x, input, A, err);                                                   \
     if (!res.ok)                                                                                   \
       return res;                                                                                  \
     else                                                                                           \
-      return (y)(res.rest, A, err);                                                                \
+      return CPC_PARSE(y, res.rest, A, err);                                                       \
   }
 
 // `left` is the equivalent of Haskell's Applicative left sequencing `<*`
 #define CPC_LEFT(name, x, y)                                                                       \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult res1 = (x)(input, A, err);                                                           \
+    CpcResult res1 = CPC_PARSE(x, input, A, err);                                                  \
     if (!res1.ok) return res1;                                                                     \
                                                                                                    \
-    CpcResult res2 = (y)(res1.rest, A, err);                                                       \
+    CpcResult res2 = CPC_PARSE(y, res1.rest, A, err);                                              \
     if (!res2.ok) return res2;                                                                     \
                                                                                                    \
     return cpc_res_ok(res1.out, res2.rest);                                                        \
@@ -270,9 +280,9 @@ static inline ___CPC_ANY(CPC_ANY_)
 // struct
 #define CPC_APPLY(name, x, y)                                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult r1 = (x)(input, A, err);                                                             \
+    CpcResult r1 = CPC_PARSE(x, input, A, err);                                                    \
     if (!r1.ok) return r1;                                                                         \
-    CpcResult r2 = (y)(r1.rest, A, err);                                                           \
+    CpcResult r2 = CPC_PARSE(y, r1.rest, A, err);                                                  \
     if (!r2.ok) return r2;                                                                         \
                                                                                                    \
     CpcValue out = cpc_val_list(A);                                                                \
@@ -289,7 +299,7 @@ static inline ___CPC_ANY(CPC_ANY_)
 // `map` is the equivalent of Haskell's `<$>`. Does not fail.
 #define CPC_MAP(name, x, fn)                                                                       \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult r = x(input, A, err);                                                                \
+    CpcResult r = CPC_PARSE(x, input, A, err);                                                     \
     return (fn)(A, &r.out, r.rest);                                                                \
   }
 
@@ -324,7 +334,7 @@ static inline ___CPC_ANY(CPC_ANY_)
     size_t   min   = (size_t)(min_count);                                                          \
     /* this loop will always terminate, see below conditions */                                    \
     for (;;) {                                                                                     \
-      CpcResult r = (parser)(cur, A, err);                                                         \
+      CpcResult r = CPC_PARSE(parser, cur, A, err);                                                \
       if (!r.ok) {                                                                                 \
         break;                                                                                     \
       }                                                                                            \
@@ -354,10 +364,10 @@ static inline ___CPC_ANY(CPC_ANY_)
     CpcSlice cur = input;                                                                          \
     /* this loop will always terminate, see below conditions */                                    \
     for (;;) {                                                                                     \
-      CpcResult rend = (end)(cur, A, err);                                                         \
+      CpcResult rend = CPC_PARSE(end, cur, A, err);                                                \
       if (rend.ok) return cpc_res_ok(out, rend.rest);                                              \
                                                                                                    \
-      CpcResult ritem = (item)(cur, A, err);                                                       \
+      CpcResult ritem = CPC_PARSE(item, cur, A, err);                                              \
       if (!ritem.ok) return ritem;                                                                 \
                                                                                                    \
       if (cpc_no_progress_made(ritem.rest, cur))                                                   \
@@ -373,7 +383,7 @@ static inline ___CPC_ANY(CPC_ANY_)
   CPC_DEFINE_PARSER(name) {                                                                        \
     CpcValue  out   = cpc_val_list(A);                                                             \
     CpcSlice  cur   = input;                                                                       \
-    CpcResult first = (item)(cur, A, err);                                                         \
+    CpcResult first = CPC_PARSE(item, cur, A, err);                                                \
     if (!first.ok) {                                                                               \
       return first_not_ok;                                                                         \
     }                                                                                              \
@@ -385,11 +395,11 @@ static inline ___CPC_ANY(CPC_ANY_)
     /* this loop will always terminate, see below conditions */                                    \
     for (;;) {                                                                                     \
       CpcSlice  before_sep = cur;                                                                  \
-      CpcResult rsep       = (sep)(cur, A, err);                                                   \
+      CpcResult rsep       = CPC_PARSE(sep, cur, A, err);                                          \
       if (!rsep.ok) {                                                                              \
         break;                                                                                     \
       }                                                                                            \
-      CpcResult next = (item)(rsep.rest, A, err);                                                  \
+      CpcResult next = CPC_PARSE(item, rsep.rest, A, err);                                         \
       if (!next.ok) {                                                                              \
         break;                                                                                     \
       }                                                                                            \
@@ -421,11 +431,11 @@ static inline ___CPC_ANY(CPC_ANY_)
 // Parses open, followed by inner and finally close. Only the value of inner is returned.
 #define CPC_BETWEEN(name, open, inner, close)                                                      \
   CPC_DEFINE_PARSER(name) {                                                                        \
-    CpcResult ro = (open)(input, A, err);                                                          \
+    CpcResult ro = CPC_PARSE(open, input, A, err);                                                 \
     if (!ro.ok) return ro;                                                                         \
-    CpcResult ri = (inner)(ro.rest, A, err);                                                       \
+    CpcResult ri = CPC_PARSE(inner, ro.rest, A, err);                                              \
     if (!ri.ok) return ri;                                                                         \
-    CpcResult rc = (close)(ri.rest, A, err);                                                       \
+    CpcResult rc = CPC_PARSE(close, ri.rest, A, err);                                              \
     if (!rc.ok) return rc;                                                                         \
     return cpc_res_ok(ri.out, rc.rest);                                                            \
   }
@@ -435,7 +445,7 @@ static inline ___CPC_ANY(CPC_ANY_)
   CPC_DEFINE_PARSER(name) {                                                                        \
     /* mark is for restoring the arena state */                                                    \
     size_t    mark = A->offset;                                                                    \
-    CpcResult r    = (parser)(input, A, err);                                                      \
+    CpcResult r    = CPC_PARSE(parser, input, A, err);                                             \
     A->offset      = mark;                                                                         \
     return r.ok ? cpc_res_ok(                                                                      \
                       cpc_val_slice(cpc_slice_sub(input, 0, (size_t)(r.rest.ptr - input.ptr))),    \
