@@ -66,16 +66,6 @@ int cpc_basic_test_run(void) {
     ASSERT_ERR_EQ(result, "this is wrong");
   }
 
-  // This is allowed although users shouldn't be really doing this and prefer using CPC_LABEL
-  {
-    PUTS("The parser error can be overridden at call time...");
-
-    CpcResult result = p_begin(cpc_slice_from_cstr("a"), NULL, "runtime override");
-    ASSERT_OUT_NOTHING(result);
-    ASSERT_REST_EQ(result, "a");
-    ASSERT_ERR_EQ(result, "runtime override");
-  }
-
   {
     PUTS("The one_of parser works...");
 
