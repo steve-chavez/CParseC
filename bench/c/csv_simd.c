@@ -2,6 +2,7 @@
 #define CPC_USE_STRING_H
 #define CPC_USE_UNNAMED
 #include "csv.h"
+#include "utils.h"
 
 // Strip the outer quotes and collapse doubled quotes inside one quoted field
 static CpcResult unescape_quoted(__attribute__((unused)) CpcArena *A, const CpcValue *v,
@@ -33,7 +34,7 @@ static CpcResult unescape_quoted(__attribute__((unused)) CpcArena *A, const CpcV
   return cpc_res_ok(cpc_val_slice((CpcSlice){.ptr = out, .len = dst}), rest);
 }
 
-CPC_TAKE_QUOTED(quoted, '"', '"')
+CPC_TAKE_QUOTED(quoted, CPC_CTX(CsvQuotedCtx, quote), CPC_CTX(CsvQuotedCtx, escape))
 CPC_MAP(quotedField, quoted, unescape_quoted)
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field_, quotedField, unquotedField)

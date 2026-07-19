@@ -55,15 +55,16 @@ int main(void) {
 
   enum { MAX_SIZE = 8192 };
   // use two arenas for header and rows to prevent forgetting to reset the arena
-  CpcValue header_arena_storage[MAX_SIZE];
-  CpcValue row_arena_storage[MAX_SIZE];
-  CpcArena header_arena;
-  CpcArena row_arena;
+  CpcValue     header_arena_storage[MAX_SIZE];
+  CpcValue     row_arena_storage[MAX_SIZE];
+  CpcArena     header_arena;
+  CpcArena     row_arena;
+  CsvQuotedCtx csv_ctx = {.quote = '"', .escape = '"'};
 
   cpc_arena_init(&header_arena, header_arena_storage,
-                 sizeof(header_arena_storage) / sizeof(header_arena_storage[0]), NULL);
+                 sizeof(header_arena_storage) / sizeof(header_arena_storage[0]), &csv_ctx);
   cpc_arena_init(&row_arena, row_arena_storage,
-                 sizeof(row_arena_storage) / sizeof(row_arena_storage[0]), NULL);
+                 sizeof(row_arena_storage) / sizeof(row_arena_storage[0]), &csv_ctx);
   CpcSlice input = (CpcSlice){.ptr = buffer, .len = len};
 
   CpcResult header_res = CPC_PARSE(csvRow, input, &header_arena);

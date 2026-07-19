@@ -10,6 +10,11 @@
 
 // reads stdin and progressivelly allocates memory by malloc/reallocing
 // works both for files (.o < file) and piping to stdin (printf ".." | .o)
+typedef struct {
+  char quote;
+  char escape;
+} CsvQuotedCtx;
+
 static inline bool read_alloc_entire_stdin(char **out_buf, size_t *out_len) {
   size_t cap = 4096;
   size_t len = 0;

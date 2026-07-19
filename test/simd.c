@@ -175,6 +175,27 @@ int main(void) {
     }
 
     {
+      PUTS("The take_quoted parser can read runtime data...");
+
+      typedef struct {
+        char quote;
+        char escape;
+      } QuotedCtx;
+
+      CpcValue  arena_storage[8] = {0};
+      CpcArena  arena;
+      QuotedCtx ctx = {.quote = '\'', .escape = '\\'};
+      cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &ctx);
+
+      CPC_TAKE_QUOTED(p_span_ctx_bsquoted, CPC_CTX(QuotedCtx, quote), CPC_CTX(QuotedCtx, escape))
+      CpcResult result =
+          CPC_PARSE(p_span_ctx_bsquoted, cpc_slice_from_cstr("'abc\\'def',rest"), &arena);
+
+      ASSERT_OUT_SLICE_EQ(result, "'abc\\'def'");
+      ASSERT_REST_EQ(result, ",rest");
+    }
+
+    {
       PUTS("The take_quoted parser can be labeled...");
 
       CPC_TAKE_QUOTED(p_span_dquoted_l_, '"', '"')

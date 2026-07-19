@@ -194,6 +194,9 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 #define CPC_CONCAT_(x, y) x##y
 #define CPC_CONCAT(x, y) CPC_CONCAT_(x, y)
 
+// Helper for runtime parser user data
+#define CPC_CTX(type, field) (((const type *)A->user)->field)
+
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with
 // `alt`
