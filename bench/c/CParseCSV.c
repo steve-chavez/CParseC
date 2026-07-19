@@ -31,7 +31,7 @@ CPC_DEFINE_PARSER(insideQuotes) {
 
   // TODO we duplicate some of the functionality of CPC_MANY(insideQuotesPrime)
   for (;;) {
-    const CpcResult piece = insideQuotesPrime(cur, A, err);
+    const CpcResult piece = CPC_PARSE(insideQuotesPrime, cur, A);
     if (!piece.ok) {
       break;
     }

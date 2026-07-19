@@ -1,5 +1,5 @@
 #include "shared.h"
 
 CpcResult parse_ok(CpcArena *A, CpcSlice input) {
-  return p_ok(input, A, NULL);
+  return CPC_PARSE(p_ok, input, A);
 }
