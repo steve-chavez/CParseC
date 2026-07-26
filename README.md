@@ -107,7 +107,7 @@ Once you define your parsers you can use `CPC_PARSE` to run them.
 | Macro | Description |
 | --- | --- |
 | `CPC_PARSE(parser, input, arena)` | Runs `parser` using `input` and `arena`. |
-| `CPC_CTX(type, field)` | Reads `field` from the `user` pointer stored in `arena`. This allows to specify runtime values for the parser. |
+| `CPC_USER(type, field)` | Reads `field` from the `user` pointer stored in `arena`. This is useful to specify runtime values for the parser. |
 
 ## Haskell Comparison
 

@@ -57,8 +57,7 @@ typedef struct {
   CpcValue *items;  // storage items
   size_t    cap;    // capacity
   size_t    offset; // bump pointer offset [0..cap]
-  void     *user;   // user pointer data for use on the fmap, we don't handle its
-                    // lifecycle
+  void     *user;   // user pointer data, we don't handle its lifecycle
 } CpcArena;
 
 // the signature is like this because both the arena and the items have to be
@@ -195,7 +194,9 @@ static inline bool cpc_no_progress_made(const CpcSlice cur, const CpcSlice prev)
 #define CPC_CONCAT(x, y) CPC_CONCAT_(x, y)
 
 // Helper for runtime parser user data
+// TODO remove CPC_CTX in next major, prefer using CPC_USER
 #define CPC_CTX(type, field) (((const type *)A->user)->field)
+#define CPC_USER(type, field) (((type *)A->user)->field)
 
 // This is more like Parsec `string'`, which doesn't consume the matching
 // prefix. We do this to avoid having a `try` function and working better with

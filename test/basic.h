@@ -164,11 +164,10 @@ int cpc_basic_test_run(void) {
     PUTS("The apply + map parser works...");
 
     CpcResult to_pair(CpcArena * A, const CpcValue *v, CpcSlice rest) {
-      Pair *pair = A->user;
-      pair->x    = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
-      pair->y    = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
+      CPC_USER(Pair, x) = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
+      CPC_USER(Pair, y) = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
 
-      return cpc_res_ok(cpc_val_ptr(pair), rest);
+      return cpc_res_ok(cpc_val_ptr(A->user), rest);
     }
 
     CPC_APPLY(p_ab, p_a, p_b);

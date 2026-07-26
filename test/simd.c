@@ -187,7 +187,7 @@ int main(void) {
       QuotedCtx ctx = {.quote = '\'', .escape = '\\'};
       cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &ctx);
 
-      CPC_TAKE_QUOTED(p_span_ctx_bsquoted, CPC_CTX(QuotedCtx, quote), CPC_CTX(QuotedCtx, escape))
+      CPC_TAKE_QUOTED(p_span_ctx_bsquoted, CPC_USER(QuotedCtx, quote), CPC_USER(QuotedCtx, escape))
       CpcResult result =
           CPC_PARSE(p_span_ctx_bsquoted, cpc_slice_from_cstr("'abc\\'def',rest"), &arena);
 
