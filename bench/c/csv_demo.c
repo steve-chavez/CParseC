@@ -84,7 +84,7 @@ int main(void) {
   while (rest.len > 0) {
     CpcResult row_res = CPC_PARSE(csvRow, rest, &row_arena);
     if (!row_res.ok) {
-      fprintf(stderr, "parse error: %s", row_res.err.msg);
+      fprintf(stderr, "parse error at row %zu: %s\n", row_index + 2, row_res.err.msg);
       goto finally;
     }
 
