@@ -69,7 +69,7 @@ int main(void) {
 
   CpcResult header_res = CPC_PARSE(csvRow, input, &header_arena);
   if (!header_res.ok || !cpc_is_list(&header_res.out)) {
-    fprintf(stderr, "failed to parse header");
+    fprintf(stderr, "failed to parse header: %s", header_res.err.msg);
     goto finally;
   }
 
@@ -84,7 +84,7 @@ int main(void) {
   while (rest.len > 0) {
     CpcResult row_res = CPC_PARSE(csvRow, rest, &row_arena);
     if (!row_res.ok) {
-      fprintf(stderr, "parse error");
+      fprintf(stderr, "parse error: %s", row_res.err.msg);
       goto finally;
     }
 
