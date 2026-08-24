@@ -1,6 +1,7 @@
 BUILD_DIR=build
 BENCH_DATA_DIR=bench/data
 
+CC ?= cc
 CFLAGS=-std=c99 -O3 -Wextra -Wall -Werror
 LDFLAGS=-I.
 
@@ -13,31 +14,31 @@ test: $(BUILD_DIR)/basic.o $(BUILD_DIR)/unnamed.o $(BUILD_DIR)/simd.o $(BUILD_DI
 bench: $(BUILD_DIR)/attoparsec_csv $(BUILD_DIR)/csv_demo.o $(BUILD_DIR)/csv_simd_demo.o $(BUILD_DIR)/csv-rust-demo $(BENCH_DATA_DIR)/customers-1000000.csv
 
 $(BUILD_DIR)/example.o: examples/example.c cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/basic.o: test/basic.c test/basic.h test/hosted.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/unnamed.o: test/unnamed.c test/hosted.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/simd.o: test/simd.c test/hosted.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(BUILD_DIR)/attoparsec_csv: bench/haskell/ParseCSV.hs $(BUILD_DIR)/.gitignore
 	ghc -fforce-recomp -O2 -Wall -outputdir $(BUILD_DIR) $< -o $@
 
 $(BUILD_DIR)/linkage.o: test/linkage/linkage.c test/linkage/a.c cparsec.h test/linkage/shared.h
-	cc $(CFLAGS) $(LDFLAGS) test/linkage/linkage.c test/linkage/a.c -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) test/linkage/linkage.c test/linkage/a.c -o $@
 
 $(BUILD_DIR)/freestanding.o: test/freestanding.c test/basic.h test/assertions.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) -ffreestanding -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -ffreestanding -c $< -o $@
 
 $(BUILD_DIR)/csv_demo.o: bench/c/csv_demo.c bench/c/CParseCSV.c bench/c/csv.h bench/c/utils.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) bench/c/csv_demo.c bench/c/CParseCSV.c -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) bench/c/csv_demo.c bench/c/CParseCSV.c -o $@
 
 $(BUILD_DIR)/csv_simd_demo.o: bench/c/csv_demo.c bench/c/csv_simd.c bench/c/csv.h bench/c/utils.h cparsec.h $(BUILD_DIR)/.gitignore
-	cc $(CFLAGS) $(LDFLAGS) bench/c/csv_demo.c bench/c/csv_simd.c -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) bench/c/csv_demo.c bench/c/csv_simd.c -o $@
 
 $(BUILD_DIR)/csv-rust-demo: bench/rust/Cargo.toml bench/rust/Cargo.lock bench/rust/src/main.rs
 	cargo build --release --manifest-path bench/rust/Cargo.toml
