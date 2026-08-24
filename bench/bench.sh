@@ -2,6 +2,8 @@ set -euo pipefail
 
 make bench > /dev/null
 
+bin=./build/csv_simd_demo
+
 # Haskell, C and Rust should give the same report,
 # this will output a failure showing the differences if there were any.
 diff -u \
@@ -16,8 +18,6 @@ diff -u \
 echo -e "# Parsing 1M CSV rows"
 
 echo -e "\n## CParseC vs Haskell \n"
-
-bin=./build/csv_simd_demo
 
 hyperfine --warmup 3 \
   "$bin < bench/data/customers-1000000.csv" \

@@ -3,13 +3,13 @@
 #include <stdlib.h>
 
 #define CPC_USE_STRING_H
-#define CPC_USE_UNNAMED
 #include "cparsec.h"
 
 CPC_TAKE_QUOTED(quotedField, '"', '"')
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
-CPC_SEP_BY_1(record, field, CPC_STRING_(","))
+CPC_STRING(comma, ",")
+CPC_SEP_BY_1(record, field, comma)
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
 CPC_LEFT(csvRow, record, lineEnd)
 

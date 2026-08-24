@@ -19,6 +19,85 @@ static inline bool is_space(char c) {
 
 CPC_TAKE_WHILE(p_is_space, is_space)
 
+static inline bool is_comma(char c) {
+  return c == ',';
+}
+
+static inline bool is_not_comma(char c) {
+  return c != ',';
+}
+
+typedef struct {
+  char x;
+  char y;
+} CpcBasicPair;
+
+static CpcResult cpc_basic_to_pair(CpcArena *A, const CpcValue *v, CpcSlice rest) {
+  CPC_USER(CpcBasicPair, x) = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
+  CPC_USER(CpcBasicPair, y) = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
+  return cpc_res_ok(cpc_val_ptr(A->user), rest);
+}
+
+CPC_STRING(p_begin_l_, "BEGIN")
+CPC_LABEL(p_begin_l, p_begin_l_, "this is wrong")
+CPC_ONE_OF(p_vowel, "aeiou")
+CPC_ONE_OF(p_vowel_l_, "aeiou")
+CPC_LABEL(p_vowel_l, p_vowel_l_, "expected vowel")
+CPC_STRING(p_end, "END")
+CPC_ALT(p_combined, p_begin, p_end)
+CPC_STRING(p_begin_wrap_l, "BEGIN")
+CPC_STRING(p_end_wrap_l, "END")
+CPC_ALT(p_combined_wrap_l, p_begin_wrap_l, p_end_wrap_l)
+CPC_LABEL(p_combined_wrap_labeled, p_combined_wrap_l, "expected begin or end")
+CPC_STRING(p_val, "value=")
+CPC_STRING(p_num, "12345")
+CPC_RIGHT(p_valnum, p_val, p_num)
+CPC_STRING(p_sel, "select 1")
+CPC_LEFT(p_stmt, p_sel, p_semicol)
+CPC_STRING(p_lparen, "(")
+CPC_STRING(p_rparen, ")")
+CPC_STRING(p_abc, "abc")
+CPC_BETWEEN(p_paren_abc, p_lparen, p_abc, p_rparen)
+CPC_APPLY(p_ab, p_a, p_b)
+CPC_MAP(p_mapped_ab, p_ab, cpc_basic_to_pair)
+CPC_TAKE_WHILE(p_only_a, is_a)
+CPC_TAKE_WHILE_1(p_at_least_1_a, is_a)
+CPC_TAKE_WHILE_1(p_at_least_1_a_l_, is_a)
+CPC_LABEL(p_at_least_1_a_l, p_at_least_1_a_l_, "expected at least one a")
+CPC_MANY(p_many_a, p_a)
+CPC_MANY(p_inf_many, p_is_space)
+CPC_MANY_1(p_many_1_a, p_a)
+CPC_MANY_1(p_many_1_a_l_, p_a)
+CPC_LABEL(p_many_1_a_l, p_many_1_a_l_, "expected one or more As")
+CPC_MANY_TILL(p_many_a_till_semicol, p_a, p_semicol)
+CPC_MANY_TILL(p_inf_many_till, p_is_space, p_b)
+CPC_TAKE_TILL(p_till_b, is_a)
+CPC_SEP_BY(p_A_sep_by_space, p_a, p_is_space)
+CPC_SEP_BY(p_inf_sep_by, p_is_space, p_is_space)
+CPC_SEP_BY_1(p_A_sep_by_1_space, p_a, p_is_space)
+CPC_SEP_BY_1(p_A_sep_by_1_space_l_, p_a, p_is_space)
+CPC_LABEL(p_A_sep_by_1_space_l, p_A_sep_by_1_space_l_, "expected one or more items")
+CPC_TAKE_WHILE(p_take_while_comma, is_comma)
+CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma)
+CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_comma, p_take_while_not_comma)
+CPC_END_OF_LINE(p_eol)
+CPC_END_OF_LINE(p_eol_l_)
+CPC_LABEL(p_eol_l, p_eol_l_, "bad line ending")
+CPC_EOF(p_eof)
+CPC_EOF(p_eof_l_)
+CPC_LABEL(p_eof_l, p_eof_l_, "missing eof")
+CPC_STRING(p_ddquote, "\"\"")
+CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
+CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
+CPC_STRING(p_token, "token")
+CPC_LEFT(p_token_semicol, p_token, p_semicol)
+CPC_MATCH(p_match_token_semicol, p_token_semicol)
+CPC_APPLY(p_ab_for_match, p_a, p_b)
+CPC_MATCH(p_match_ab, p_ab_for_match)
+CPC_ANY(p_any)
+CPC_ANY(p_any_l_)
+CPC_LABEL(p_any_l, p_any_l_, "expected any char")
+
 int cpc_basic_test_run(void) {
   {
     PUTS("The string parser succeeds...");
@@ -57,9 +136,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The string parser can be labeled...");
 
-    CPC_STRING(p_begin_l_, "BEGIN")
-    CPC_LABEL(p_begin_l, p_begin_l_, "this is wrong")
-
     CpcResult result = CPC_PARSE(p_begin_l, cpc_slice_from_cstr("a"), NULL);
     ASSERT_OUT_NOTHING(result);
     ASSERT_REST_EQ(result, "a");
@@ -68,10 +144,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The one_of parser works...");
-
-    CPC_ONE_OF(p_vowel, "aeiou")
-    CPC_ONE_OF(p_vowel_l_, "aeiou")
-    CPC_LABEL(p_vowel_l, p_vowel_l_, "expected vowel")
 
     CpcResult result = CPC_PARSE(p_vowel, cpc_slice_from_cstr("apple"), NULL);
 
@@ -92,9 +164,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The alternative parser works...");
 
-    CPC_STRING(p_end, "END")
-    CPC_ALT(p_combined, p_begin, p_end)
-
     CpcResult result = CPC_PARSE(p_combined, cpc_slice_from_cstr("END leftovers"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "END");
     ASSERT_REST_EQ(result, " leftovers");
@@ -102,11 +171,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("Any parser can be labeled with CPC_LABEL...");
-
-    CPC_STRING(p_begin_wrap_l, "BEGIN")
-    CPC_STRING(p_end_wrap_l, "END")
-    CPC_ALT(p_combined_wrap_l, p_begin_wrap_l, p_end_wrap_l)
-    CPC_LABEL(p_combined_wrap_labeled, p_combined_wrap_l, "expected begin or end")
 
     CpcResult result = CPC_PARSE(p_combined_wrap_labeled, cpc_slice_from_cstr("other"), NULL);
     ASSERT_OUT_NOTHING(result);
@@ -117,10 +181,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The right parser works...");
 
-    CPC_STRING(p_val, "value=")
-    CPC_STRING(p_num, "12345")
-    CPC_RIGHT(p_valnum, p_val, p_num)
-
     CpcResult result = CPC_PARSE(p_valnum, cpc_slice_from_cstr("value=12345"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "12345");
     ASSERT_REST_EMPTY(result);
@@ -128,9 +188,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The left parser works...");
-
-    CPC_STRING(p_sel, "select 1")
-    CPC_LEFT(p_stmt, p_sel, p_semicol)
 
     CpcResult result = CPC_PARSE(p_stmt, cpc_slice_from_cstr("select 1;"), NULL);
     ASSERT_OUT_SLICE_EQ(result, "select 1");
@@ -140,11 +197,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The between parser works...");
 
-    CPC_STRING(p_lparen, "(")
-    CPC_STRING(p_rparen, ")")
-    CPC_STRING(p_abc, "abc")
-    CPC_BETWEEN(p_paren_abc, p_lparen, p_abc, p_rparen)
-
     CpcResult result = CPC_PARSE(p_paren_abc, cpc_slice_from_cstr("(abc)rest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "abc");
@@ -152,26 +204,12 @@ int cpc_basic_test_run(void) {
   }
 
   {
-    CpcValue arena_storage[2] = {0};
-    CpcArena arena;
-    typedef struct {
-      char x;
-      char y;
-    } Pair;
-    Pair pair = {0};
+    CpcValue     arena_storage[2] = {0};
+    CpcArena     arena;
+    CpcBasicPair pair = {0};
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &pair);
 
     PUTS("The apply + map parser works...");
-
-    CpcResult to_pair(CpcArena * A, const CpcValue *v, CpcSlice rest) {
-      CPC_USER(Pair, x) = cpc_val_list_at(A, v, 0)->as.slice.ptr[0];
-      CPC_USER(Pair, y) = cpc_val_list_at(A, v, 1)->as.slice.ptr[0];
-
-      return cpc_res_ok(cpc_val_ptr(A->user), rest);
-    }
-
-    CPC_APPLY(p_ab, p_a, p_b);
-    CPC_MAP(p_mapped_ab, p_ab, to_pair);
 
     CpcResult result = CPC_PARSE(p_mapped_ab, cpc_slice_from_cstr("AB"), &arena);
 
@@ -183,8 +221,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The takewhile parser succeeds...");
-
-    CPC_TAKE_WHILE(p_only_a, is_a)
 
     CpcResult result = CPC_PARSE(p_only_a, cpc_slice_from_cstr("aaaaaaaaaabbbbb"), NULL);
 
@@ -211,8 +247,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The takewhile1 parser succeeds...");
 
-    CPC_TAKE_WHILE_1(p_at_least_1_a, is_a)
-
     CpcResult result = CPC_PARSE(p_at_least_1_a, cpc_slice_from_cstr("abb"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "a");
@@ -236,9 +270,6 @@ int cpc_basic_test_run(void) {
 
     PUTS("The takewhile1 parser can be labeled...");
 
-    CPC_TAKE_WHILE_1(p_at_least_1_a_l_, is_a)
-    CPC_LABEL(p_at_least_1_a_l, p_at_least_1_a_l_, "expected at least one a")
-
     CpcResult result4 = CPC_PARSE(p_at_least_1_a_l, cpc_slice_from_cstr("bba"), NULL);
 
     ASSERT(!result4.ok);
@@ -251,8 +282,6 @@ int cpc_basic_test_run(void) {
     CpcValue arena_storage[10] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-
-    CPC_MANY(p_many_a, p_a)
 
     {
       CpcResult result = CPC_PARSE(p_many_a, cpc_slice_from_cstr("AAAAb"), &arena);
@@ -281,8 +310,6 @@ int cpc_basic_test_run(void) {
     PUTS("The many parser will always finish...");
 
     {
-      CPC_MANY(p_inf_many, p_is_space);
-
       cpc_arena_reset(&arena);
 
       CpcResult result = CPC_PARSE(p_inf_many, cpc_slice_from_cstr("anything"), &arena);
@@ -307,10 +334,6 @@ int cpc_basic_test_run(void) {
     CpcValue arena_storage[10] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-
-    CPC_MANY_1(p_many_1_a, p_a)
-    CPC_MANY_1(p_many_1_a_l_, p_a)
-    CPC_LABEL(p_many_1_a_l, p_many_1_a_l_, "expected one or more As")
 
     {
       CpcResult result = CPC_PARSE(p_many_1_a, cpc_slice_from_cstr("AAAb"), &arena);
@@ -360,8 +383,6 @@ int cpc_basic_test_run(void) {
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
 
-    CPC_MANY_TILL(p_many_a_till_semicol, p_a, p_semicol)
-
     {
       PUTS("The manytill parser succeeds...");
 
@@ -390,8 +411,6 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The manytill parser will always finish...");
 
-      CPC_MANY_TILL(p_inf_many_till, p_is_space, p_b)
-
       CpcResult result = CPC_PARSE(p_inf_many_till, cpc_slice_from_cstr("abc"), &arena);
 
       ASSERT(!result.ok);
@@ -412,8 +431,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The taketill parser succeeds...");
-
-    CPC_TAKE_TILL(p_till_b, is_a)
 
     CpcResult result = CPC_PARSE(p_till_b, cpc_slice_from_cstr("bbbbaaaa"), NULL);
 
@@ -439,8 +456,6 @@ int cpc_basic_test_run(void) {
     CpcValue arena_storage[6] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-
-    CPC_SEP_BY(p_A_sep_by_space, p_a, p_is_space)
 
     {
       PUTS("The sepby parser succeeds...");
@@ -482,8 +497,6 @@ int cpc_basic_test_run(void) {
     {
       PUTS("The sepby parser will always finish...");
 
-      CPC_SEP_BY(p_inf_sep_by, p_is_space, p_is_space)
-
       cpc_arena_reset(&arena);
 
       CpcResult result = CPC_PARSE(p_inf_sep_by, cpc_slice_from_cstr("abc"), &arena);
@@ -497,10 +510,6 @@ int cpc_basic_test_run(void) {
     CpcValue arena_storage[6] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-
-    CPC_SEP_BY_1(p_A_sep_by_1_space, p_a, p_is_space)
-    CPC_SEP_BY_1(p_A_sep_by_1_space_l_, p_a, p_is_space)
-    CPC_LABEL(p_A_sep_by_1_space_l, p_A_sep_by_1_space_l_, "expected one or more items")
 
     {
       PUTS("The sepby1 parser succeeds...");
@@ -529,18 +538,6 @@ int cpc_basic_test_run(void) {
 
     {
       PUTS("The sepby1 parser will always finish...");
-
-      bool is_comma(char c) {
-        return c == ',';
-      }
-      CPC_TAKE_WHILE(p_take_while_comma, is_comma)
-
-      bool is_not_comma(char c) {
-        return c != ',';
-      }
-      CPC_TAKE_WHILE(p_take_while_not_comma, is_not_comma)
-
-      CPC_SEP_BY_1(p_inf_sep_by_1, p_take_while_comma, p_take_while_not_comma)
 
       CpcResult result = CPC_PARSE(p_inf_sep_by_1, cpc_slice_from_cstr(","), &arena);
 
@@ -588,8 +585,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The named end of line parser works...");
 
-    CPC_END_OF_LINE(p_eol)
-
     CpcResult result = CPC_PARSE(p_eol, cpc_slice_from_cstr("\nrest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "\n");
@@ -598,9 +593,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The end of line parser can be labeled...");
-
-    CPC_END_OF_LINE(p_eol_l_)
-    CPC_LABEL(p_eol_l, p_eol_l_, "bad line ending")
 
     CpcResult result = CPC_PARSE(p_eol_l, cpc_slice_from_cstr("A"), NULL);
 
@@ -630,8 +622,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The named eof parser works...");
 
-    CPC_EOF(p_eof)
-
     CpcResult result = CPC_PARSE(p_eof, cpc_slice_from_cstr(""), NULL);
 
     ASSERT(result.ok);
@@ -640,9 +630,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The eof parser can be labeled...");
-
-    CPC_EOF(p_eof_l_)
-    CPC_LABEL(p_eof_l, p_eof_l_, "missing eof")
 
     CpcResult result = CPC_PARSE(p_eof_l, cpc_slice_from_cstr("A"), NULL);
 
@@ -656,10 +643,6 @@ int cpc_basic_test_run(void) {
       PUTS("The pure parser works...");
 
       // This is the same as Haskell's `string "\"\"" >> return "\""`
-      CPC_STRING(p_ddquote, "\"\"")
-      CPC_PURE(p_dquote_, cpc_val_slice(cpc_slice_from_cstr("\"")))
-      CPC_RIGHT(p_dquote, p_ddquote, p_dquote_)
-
       CpcResult result = CPC_PARSE(p_dquote, cpc_slice_from_cstr("\"\"abc"), NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "\"");
@@ -669,10 +652,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The match parser works...");
-
-    CPC_STRING(p_token, "token")
-    CPC_LEFT(p_token_semicol, p_token, p_semicol)
-    CPC_MATCH(p_match_token_semicol, p_token_semicol)
 
     CpcResult plain = CPC_PARSE(p_token_semicol, cpc_slice_from_cstr("token;rest"), NULL);
 
@@ -691,9 +670,6 @@ int cpc_basic_test_run(void) {
     CpcValue arena_storage[2] = {0};
     CpcArena arena;
     cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), NULL);
-
-    CPC_APPLY(p_ab_for_match, p_a, p_b)
-    CPC_MATCH(p_match_ab, p_ab_for_match)
 
     CpcResult result1 = CPC_PARSE(p_match_ab, cpc_slice_from_cstr("ABrest"), &arena);
 
@@ -729,8 +705,6 @@ int cpc_basic_test_run(void) {
   {
     PUTS("The named any parser works...");
 
-    CPC_ANY(p_any)
-
     CpcResult result = CPC_PARSE(p_any, cpc_slice_from_cstr("Brest"), NULL);
 
     ASSERT_OUT_SLICE_EQ(result, "B");
@@ -739,9 +713,6 @@ int cpc_basic_test_run(void) {
 
   {
     PUTS("The any parser can be labeled...");
-
-    CPC_ANY(p_any_l_)
-    CPC_LABEL(p_any_l, p_any_l_, "expected any char")
 
     CpcResult result = CPC_PARSE(p_any_l, cpc_slice_from_cstr(""), NULL);
 

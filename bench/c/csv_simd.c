@@ -1,6 +1,5 @@
 // A more efficient CSV parser than bench/c/CParseCSV.c, using SIMD parsers
 #define CPC_USE_STRING_H
-#define CPC_USE_UNNAMED
 #include "csv.h"
 #include "utils.h"
 
@@ -40,7 +39,8 @@ static inline CPC_MAP(quotedField, quoted, unescape_quoted);
 static inline CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n");
 static inline CPC_ALT(field_, quotedField, unquotedField);
 static inline CPC_LABEL(field, field_, "field");
-static inline CPC_SEP_BY_1(record, field, CPC_STRING_(","));
+static inline CPC_STRING(comma, ",");
+static inline CPC_SEP_BY_1(record, field, comma);
 static inline CPC_ALT(lineEnd_, CPC_END_OF_LINE_, CPC_EOF_);
 static inline CPC_LABEL(lineEnd, lineEnd_, "expected newline or end of input");
 CPC_LEFT(csvRow, record, lineEnd)

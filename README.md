@@ -23,13 +23,13 @@ A CSV parser looks like this:
 #include <stdlib.h>
 
 #define CPC_USE_STRING_H
-#define CPC_USE_UNNAMED
 #include "cparsec.h"
 
 CPC_TAKE_QUOTED(quotedField, '"', '"')
 CPC_TAKE_TILL_ONE_OF(unquotedField, ",\r\n")
 CPC_ALT(field, quotedField, unquotedField)
-CPC_SEP_BY_1(record, field, CPC_STRING_(","))
+CPC_STRING(comma, ",")
+CPC_SEP_BY_1(record, field, comma)
 CPC_ALT(lineEnd, CPC_END_OF_LINE_, CPC_EOF_)
 CPC_LEFT(csvRow, record, lineEnd)
 
@@ -112,6 +112,7 @@ CPC_SEP_BY_1(record, field, CPC_STRING_(","))
 ```
 
 To do this use `#define CPC_USE_UNNAMED` since unnamed combinators require non-standard C99 behavior ([Nested Functions](https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html), [Statement Exprs](https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html) and `__COUNTER__`).
+Reallistically, they only work on GCC and not on other compilers like `clang`.
 
 Currently this only works for `CPC_STRING_`, `CPC_EOF_` and `CPC_ANY_` but support can be added for every combinator.
 

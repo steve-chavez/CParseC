@@ -9,12 +9,25 @@
 #include "assertions.h"
 #include "cparsec.h"
 
+typedef struct {
+  char quote;
+  char escape;
+} QuotedCtx;
+
+CPC_TAKE_TILL_ONE_OF(p_take_till_semicol_or_comma, ";,")
+CPC_TAKE_TILL_ONE_OF(p_take_till_comma, ",")
+CPC_TAKE_TILL_ONE_OF(p_take_till_semicol, ";")
+CPC_TAKE_QUOTED(p_span_dquoted, '"', '"')
+CPC_TAKE_QUOTED(p_span_squoted, '\'', '\'')
+CPC_TAKE_QUOTED(p_span_bsquoted, '\'', '\\')
+CPC_TAKE_QUOTED(p_span_ctx_bsquoted, CPC_USER(QuotedCtx, quote), CPC_USER(QuotedCtx, escape))
+CPC_TAKE_QUOTED(p_span_dquoted_l_, '"', '"')
+CPC_LABEL(p_span_dquoted_l, p_span_dquoted_l_, "expected quoted field")
+
 int main(void) {
   {
     {
       PUTS("The take_till_one_of parser works...");
-
-      CPC_TAKE_TILL_ONE_OF(p_take_till_semicol_or_comma, ";,")
 
       CpcResult result =
           CPC_PARSE(p_take_till_semicol_or_comma, cpc_slice_from_cstr("token,rest"), NULL);
@@ -26,8 +39,6 @@ int main(void) {
     {
       PUTS("The take_till_one_of parser returns empty when the first byte matches...");
 
-      CPC_TAKE_TILL_ONE_OF(p_take_till_comma, ",")
-
       CpcResult result = CPC_PARSE(p_take_till_comma, cpc_slice_from_cstr(",rest"), NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "");
@@ -37,8 +48,6 @@ int main(void) {
     {
       PUTS("The take_till_one_of parser consumes the whole input when it hits eof...");
 
-      CPC_TAKE_TILL_ONE_OF(p_take_till_semicol, ";")
-
       CpcResult result = CPC_PARSE(p_take_till_semicol, cpc_slice_from_cstr("token"), NULL);
 
       ASSERT_OUT_SLICE_EQ(result, "token");
@@ -47,8 +56,6 @@ int main(void) {
   }
 
   {
-    CPC_TAKE_QUOTED(p_span_dquoted, '"', '"')
-
     {
       PUTS("The take_quoted parser works with doubled quotes...");
 
@@ -122,8 +129,6 @@ int main(void) {
       ASSERT_REST_EQ(result, "\"abcde\"\"");
     }
 
-    CPC_TAKE_QUOTED(p_span_squoted, '\'', '\'')
-
     {
       PUTS("The take_quoted parser works with single quotes...");
 
@@ -142,8 +147,6 @@ int main(void) {
       ASSERT_OUT_SLICE_EQ(result, "'abcd''efg''hi'");
       ASSERT_REST_EQ(result, ",rest");
     }
-
-    CPC_TAKE_QUOTED(p_span_bsquoted, '\'', '\\')
 
     {
       PUTS("The take_quoted parser works with backslash-escaped quotes...");
@@ -177,17 +180,11 @@ int main(void) {
     {
       PUTS("The take_quoted parser can read runtime data...");
 
-      typedef struct {
-        char quote;
-        char escape;
-      } QuotedCtx;
-
       CpcValue  arena_storage[8] = {0};
       CpcArena  arena;
       QuotedCtx ctx = {.quote = '\'', .escape = '\\'};
       cpc_arena_init(&arena, arena_storage, sizeof(arena_storage) / sizeof(arena_storage[0]), &ctx);
 
-      CPC_TAKE_QUOTED(p_span_ctx_bsquoted, CPC_USER(QuotedCtx, quote), CPC_USER(QuotedCtx, escape))
       CpcResult result =
           CPC_PARSE(p_span_ctx_bsquoted, cpc_slice_from_cstr("'abc\\'def',rest"), &arena);
 
@@ -197,9 +194,6 @@ int main(void) {
 
     {
       PUTS("The take_quoted parser can be labeled...");
-
-      CPC_TAKE_QUOTED(p_span_dquoted_l_, '"', '"')
-      CPC_LABEL(p_span_dquoted_l, p_span_dquoted_l_, "expected quoted field")
 
       CpcResult result = CPC_PARSE(p_span_dquoted_l, cpc_slice_from_cstr("plain"), NULL);
 

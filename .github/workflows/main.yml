@@ -9,6 +9,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
 
     steps:
       - uses: actions/checkout@v4.3.0
@@ -17,13 +20,16 @@ jobs:
         uses: cachix/install-nix-action@v31.5.0
 
       - name: Build
-        run: nix-shell --run "make"
+        run: nix-shell --run "make test CC=${{ matrix.compiler }}"
 
       - name: Run tests
         run: nix-shell --run "./test/test.sh"
 
   bench:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
 
     steps:
       - uses: actions/checkout@v4.3.0
@@ -34,7 +40,7 @@ jobs:
         uses: cachix/install-nix-action@v31.5.0
 
       - name: Build
-        run: nix-shell --run "make bench"
+        run: nix-shell --run "make bench CC=${{ matrix.compiler }}"
 
       - name: Run bench
         run: nix-shell --run "./bench/bench.sh" >> "$GITHUB_STEP_SUMMARY"
