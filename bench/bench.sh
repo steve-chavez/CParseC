@@ -17,14 +17,14 @@ diff -u \
 # Print the report in markdown
 echo -e "# Parsing 1M CSV rows"
 
-echo -e "\n## CParseC vs Haskell \n"
+#echo -e "\n## CParseC vs Haskell \n"
 
-hyperfine --warmup 3 \
-  "$bin < bench/data/customers-1000000.csv" \
-  './build/attoparsec_csv < bench/data/customers-1000000.csv' \
-  --export-markdown build/report-c-hs.md 1>&2
+#hyperfine --warmup 3 \
+  #"$bin < bench/data/customers-1000000.csv" \
+  #'./build/attoparsec_csv < bench/data/customers-1000000.csv' \
+  #--export-markdown build/report-c-hs.md 1>&2
 
-cat build/report-c-hs.md
+#cat build/report-c-hs.md
 
 echo -e "\n## CParseC vs Rust\n"
 

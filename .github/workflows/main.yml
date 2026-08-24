@@ -8,13 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [gcc, clang]
+        compiler: [gcc, clang, filc]
 
     steps:
       - uses: actions/checkout@v4.3.0
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31.5.0
+
+      - name: Use Fil-C Cachix cache
+        uses: cachix/cachix-action@v17
+        with:
+          name: filc
 
       - name: Build
         run: nix-shell --run "make test CC=${{ matrix.compiler }}"
@@ -26,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [gcc, clang]
+        compiler: [gcc, clang, filc]
 
     steps:
       - uses: actions/checkout@v4.3.0
@@ -35,6 +40,11 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31.5.0
+
+      - name: Use Fil-C Cachix cache
+        uses: cachix/cachix-action@v17
+        with:
+          name: filc
 
       - name: Build
         run: nix-shell --run "make bench CC=${{ matrix.compiler }}"
@@ -60,6 +70,11 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31.5.0
+
+      - name: Use Fil-C Cachix cache
+        uses: cachix/cachix-action@v17
+        with:
+          name: filc
 
       - name: Build
         run: nix-shell --run "make style-check"
