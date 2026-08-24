@@ -42,5 +42,5 @@ static inline CPC_ALT(field_, quotedField, unquotedField);
 static inline CPC_LABEL(field, field_, "field");
 static inline CPC_SEP_BY_1(record, field, CPC_STRING_(","));
 static inline CPC_ALT(lineEnd_, CPC_END_OF_LINE_, CPC_EOF_);
-static inline CPC_LABEL(lineEnd, lineEnd_, "expected newline or end of line");
+static inline CPC_LABEL(lineEnd, lineEnd_, "expected newline or end of input");
 CPC_LEFT(csvRow, record, lineEnd)
