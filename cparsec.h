@@ -456,9 +456,9 @@ CPCAPI ___CPC_ANY(CPC_ANY_)
 #define CPC_MATCH(name, parser)                                                                    \
   CPC_DEFINE_PARSER(name) {                                                                        \
     /* mark is for restoring the arena state */                                                    \
-    size_t    mark = A->offset;                                                                    \
+    size_t    mark = A ? A->offset : 0;                                                            \
     CpcResult r    = CPC_PARSE(parser, input, A, err);                                             \
-    A->offset      = mark;                                                                         \
+    if (A) A->offset = mark;                                                                       \
     return r.ok ? cpc_res_ok(                                                                      \
                       cpc_val_slice(cpc_slice_sub(input, 0, (size_t)(r.rest.ptr - input.ptr))),    \
                       r.rest)                                                                      \
