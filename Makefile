@@ -2,15 +2,17 @@ BUILD_DIR=build
 BENCH_DATA_DIR=bench/data
 
 CC ?= cc
-CFLAGS=-std=c99 -O3 -Wextra -Wall -Werror
+CFLAGS=-std=c99 -Wextra -Wall -Werror
 LDFLAGS=-I.
 
 SRC = cparsec.h bench/c/*.[ch] test/*.[ch] test/linkage/*.[ch]
 
 all: test bench
 
+test: CFLAGS += -O0
 test: $(BUILD_DIR)/basic $(BUILD_DIR)/unnamed $(BUILD_DIR)/simd $(BUILD_DIR)/linkage $(BUILD_DIR)/freestanding $(BUILD_DIR)/example
 
+bench: CFLAGS += -O3
 bench: $(BUILD_DIR)/attoparsec_csv $(BUILD_DIR)/csv_demo $(BUILD_DIR)/csv_simd_demo $(BUILD_DIR)/csv-rust-demo $(BENCH_DATA_DIR)/customers-1000000.csv
 
 $(BUILD_DIR)/example: examples/example.c cparsec.h $(BUILD_DIR)/.gitignore
